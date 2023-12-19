@@ -1,7 +1,17 @@
-import enum
-from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Optional, Sequence, Tuple, Union, cast
+from enum import Enum
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
 
 from haystack.schema import FilterType
 
@@ -17,7 +27,7 @@ COMPARISON_OPS = ("$eq", "$ne", "$in", "$nin", "$gt", "$gte", "$lt", "$lte", "$e
 OP_EQ, OP_NEQ, OP_IN, OP_NIN, OP_GT, OP_GTE, OP_LT, OP_LTE, OP_EXISTS = COMPARISON_OPS
 
 
-class OpType(enum.StrEnum):
+class OpType(Enum):
     LOGICAL = "logical"
     COMPARISON = "comparison"
     FIELD_NAME = "filed_name"
