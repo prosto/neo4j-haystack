@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-semver", "hatch-regex-commit"]
+requires = ["hatchling>=1.8.0", "hatch-regex-commit"]
 build-backend = "hatchling.build"
 
 [project]
@@ -53,11 +53,11 @@ Issues = "https://github.com/prosto/neo4j-haystack/issues"
 Source = "https://github.com/prosto/neo4j-haystack"
 
 [tool.hatch.version]
-scheme = "semver"
 source = "regex_commit"
 path = "src/neo4j_haystack/__about__.py"
-validate-bump = true
 tag_sign = false
+tag_name = "v{new_version}"
+commit_message = "🚀 Version {new_version}"
 
 [tool.hatch.envs.default]
 features = ["tests"]

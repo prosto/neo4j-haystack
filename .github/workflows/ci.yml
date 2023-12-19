@@ -22,7 +22,7 @@ jobs:
       - name: Install Hatch
         run: |
           pip install --upgrade pip
-          pip install hatch
+          pip install --upgrade hatch
 
       - name: Code quality checks
         run: hatch run lint:all
