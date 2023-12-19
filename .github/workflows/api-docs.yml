@@ -1,0 +1,48 @@
+name: api-docs
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v[0-9].[0-9]+.[0-9]+*"
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: api-docs-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-on-pypi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install Hatch
+        run: pip install --upgrade hatch
+
+      - name: Publish Docs
+        run: hatch run docs:publish

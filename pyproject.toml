@@ -100,6 +100,7 @@ features = ["docs", "typing"]
 [tool.hatch.envs.docs.scripts]
 build = "mkdocs build --clean --strict"
 serve = "mkdocs serve --dev-addr localhost:8000"
+publish = "mkdocs gh-deploy --force"
 
 [tool.hatch.envs.maintain]
 template = "maintain"
