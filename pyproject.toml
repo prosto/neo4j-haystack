@@ -59,6 +59,9 @@ tag_sign = false
 tag_name = "v{new_version}"
 commit_message = "🚀 Version {new_version}"
 
+[tool.hatch.build]
+include = ["/src/**/*.py"]
+
 [tool.hatch.envs.default]
 features = ["tests"]
 template = "default"
