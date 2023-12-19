@@ -1,0 +1,93 @@
+site_name: "neo4j-haystack"
+site_description: "Haystack Document Store for Neo4j."
+site_url: "https://prosto.github.io/neo4j-haystack/"
+repo_url: "https://github.com/prosto/neo4j-haystack"
+repo_name: "prosto/neo4j-haystack"
+site_dir: "site"
+watch:
+  - README.md
+  - README.md
+  - src
+
+nav:
+  - Home:
+    - Overview: index.md
+    - Changelog: changelog.md
+    - License: license.md
+  - Code Reference:
+    - Neo4jDocumentStore: reference/neo4j_store.md
+    - Neo4jClient: reference/neo4j_client.md
+    - FilterParser: reference/filters.md
+    - Errors: reference/errors.md
+  - Haystack Documentation: https://docs.haystack.deepset.ai/docs
+
+theme:
+  name: material
+  logo: assets/panda-logo.png
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/mkdocstrings.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - toc:
+      permalink: "¤"
+
+plugins:
+  - search
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://mkdocstrings.github.io/objects.inv
+            - https://mkdocstrings.github.io/griffe/objects.inv
+            - https://neo4j.com/docs/api/python-driver/current/objects.inv
+          options:
+            docstring_options:
+              ignore_init_summary: yes
+            merge_init_into_class: no
+            separate_signature: true
+            show_signature_annotations: true
+            line_length: 80
+            show_source: yes
+            show_root_full_path: no
+            docstring_section_style: list
+            annotations_path: brief
+            members_order: source
+            filters: [] # show private methods
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/prosto
+
