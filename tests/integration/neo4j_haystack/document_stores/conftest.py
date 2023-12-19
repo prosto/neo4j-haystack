@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 from typing import Any, Callable, Generator, List
 
@@ -88,7 +89,9 @@ def neo4j_database():
         f"bolt://localhost:{NEO4J_PORT}", database="neo4j", username="neo4j", password="passw0rd"
     )
 
-    client = docker.from_env()
+    client = (
+        docker.from_env() if sys.platform == "win32" else docker.DockerClient(base_url="unix://var/run/docker.sock")
+    )
     container = client.containers.run(
         image="neo4j:5.13.0",
         auto_remove=True,
