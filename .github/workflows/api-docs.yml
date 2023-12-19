@@ -26,6 +26,9 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Install Hatch
+        run: pip install --upgrade hatch
+
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
@@ -38,9 +41,6 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-
-      - name: Install Hatch
-        run: pip install --upgrade hatch
 
       - name: Publish Docs
         run: hatch run docs:publish
