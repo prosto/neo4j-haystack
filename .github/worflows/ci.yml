@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+
+  quality:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Hatch
+      run: pip install hatch
+
+    - name: Check if the documentation builds correctly
+      run: hatch run lint:all
+
+  test:
+    strategy:
+      matrix:
+        python-version:
+          - '3.8.x'
+          - '3.9.x'
+          - '3.10.x'
+        os:
+          - ubuntu-20.04
+          - windows-latest
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    name: Python ${{ matrix.python-version }} test on ${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Hatch
+        run: pip install hatch
+
+      - name: Run tests
+        run: |
+          hatch run test
