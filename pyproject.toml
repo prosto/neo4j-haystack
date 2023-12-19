@@ -1,0 +1,222 @@
+[build-system]
+requires = ["hatchling", "hatch-semver", "hatch-regex-commit"]
+build-backend = "hatchling.build"
+
+[project]
+name = "neo4j-haystack"
+dynamic = ["version"]
+description = 'Integration of Neo4j graph database with Haystack'
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = ["Haystack", "semantic-search", "DocumentStore", "neo4j"]
+authors = [
+  { name = "Sergey Bondarenco", email = "sergey.bondarenco@outlook.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = ["farm-haystack>=1.20.0", "neo4j>=5.8.1", "tqdm"]
+
+[project.optional-dependencies]
+docker = ["docker"]
+tests = [
+  "coverage[toml]>=6.5",
+  "pytest",
+  "neo4j-haystack[docker]",
+  "farm-haystack[inference]>=1.20.0",
+]
+docs = [
+  "mkdocs>=1.3",
+  "mkdocstrings[python]",
+  "mkdocs-material>=7.3",
+  "mkdocs-coverage>=0.2",
+  "mkdocs-section-index>=0.3",
+  "black>=23.1.0",
+]
+maintain = ["git-changelog>=2.3"]
+quality = ["black>=23.1.0", "ruff>=0.0.166"]
+typing = ["mypy>=1.7"]
+examples = ["datasets"]
+all = ["neo4j-haystack[docker,tests,docs,maintain,quality,typing,examples]"]
+
+[project.urls]
+Documentation = "https://github.com/prosto/neo4j-haystack#readme"
+Issues = "https://github.com/prosto/neo4j-haystack/issues"
+Source = "https://github.com/prosto/neo4j-haystack"
+
+[tool.hatch.version]
+scheme = "semver"
+source = "regex_commit"
+path = "src/neo4j_haystack/__about__.py"
+validate-bump = true
+tag_sign = false
+
+[tool.hatch.envs.default]
+features = ["tests"]
+template = "default"
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage html"]
+cov = ["test-cov", "cov-report"]
+
+[tool.hatch.envs.dev]
+features = ["all"]
+description = """
+Environment can be used locally for development as it installs all dependencies. Usefull when working in IDE.
+Run `hatch env create dev` in order to create the environment. Works well when you configure hatch to install
+virtual environments into project speicifc dir (e.g. `neo4j_haystack/.venv`). See `dirs.env` setting by running `hatch config show`.
+"""
+
+[tool.hatch.envs.data]
+features = ["examples"]
+template = "data"
+
+[tool.hatch.envs.data.scripts]
+load-movies = "python scripts/load_movies.py"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--strict-markers"
+markers = [
+  "unit: unit tests",
+  "integration: integration tests",
+  "neo4j: requires Neo4j container",
+]
+
+[tool.hatch.envs.docs]
+template = "docs"
+features = ["docs", "typing"]
+
+[tool.hatch.envs.docs.scripts]
+build = "mkdocs build --clean --strict"
+serve = "mkdocs serve --dev-addr localhost:8000"
+
+[tool.hatch.envs.maintain]
+template = "maintain"
+features = ["maintain"]
+
+[tool.hatch.envs.maintain.scripts]
+changelog = "git-changelog -c basic -t angular"
+
+[tool.git-changelog]
+bump = "auto"
+convention = "angular"
+in-place = true
+output = "CHANGELOG.md"
+parse-refs = false
+parse-trailers = true
+sections = ["build", "deps", "feat", "fix", "refactor"]
+template = "keepachangelog"
+
+[tool.hatch.envs.lint]
+template = "lint"
+features = ["quality", "typing"]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src/neo4j_haystack tests examples scripts}"
+style = ["ruff {args:.}", "black --check --diff {args:.}"]
+fmt = ["black {args:.}", "ruff --fix {args:.}", "style"]
+all = ["style", "typing"]
+
+[tool.black]
+target-version = ["py38"]
+line-length = 120
+skip-string-normalization = true
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+select = [
+  "A",
+  "ARG",
+  "B",
+  "C",
+  "DTZ",
+  "E",
+  "EM",
+  "F",
+  "FBT",
+  "I",
+  "ICN",
+  "ISC",
+  "N",
+  "PLC",
+  "PLE",
+  "PLR",
+  "PLW",
+  "Q",
+  "RUF",
+  "S",
+  "T",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+ignore = [
+  # Allow function arguments shadowing a Python builtin (e.g. `id`)
+  "A002",
+  "A003",
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Allow boolean-typed positional argument in function definition
+  "FBT001",
+  # Allow boolean default positional argument in function definition
+  "FBT002",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Ignore checks for possible passwords
+  "S105",
+  "S106",
+  "S107",
+  # Ignore complexity
+  "C901",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+
+  "EM101",
+  "EM102",
+]
+unfixable = [
+  # Don't touch unused imports
+  "F401",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.ruff.isort]
+known-first-party = ["neo4j_haystack"]
+
+[tool.ruff.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252"]
+
+[tool.coverage.run]
+source_pkgs = ["neo4j_haystack", "tests"]
+branch = true
+parallel = true
+omit = ["src/neo4j_haystack/__about__.py"]
+
+[tool.coverage.paths]
+neo4j_haystack = ["src/neo4j_haystack", "*/neo4j-haystack/src/neo4j_haystack"]
+tests = ["tests", "*/neo4j-haystack/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
