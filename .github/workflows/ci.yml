@@ -4,31 +4,34 @@ on:
   push:
   pull_request:
     branches:
-    - main
+      - main
 
 jobs:
-
   quality:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Install Hatch
-      run: pip install hatch
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
 
-    - name: Check if the documentation builds correctly
-      run: hatch run lint:all
+      - name: Install Hatch
+        run: pip install hatch
+
+      - name: Check if the documentation builds correctly
+        run: hatch run lint:all
 
   test:
     strategy:
       matrix:
         python-version:
-          - '3.8.x'
-          - '3.9.x'
-          - '3.10.x'
+          - "3.8.x"
+          - "3.9.x"
+          - "3.10.x"
         os:
           - ubuntu-20.04
           - windows-latest
