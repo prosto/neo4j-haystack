@@ -20,9 +20,11 @@ jobs:
           python-version: "3.8"
 
       - name: Install Hatch
-        run: pip install hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
 
-      - name: Check if the documentation builds correctly
+      - name: Code quality checks
         run: hatch run lint:all
 
   test:
