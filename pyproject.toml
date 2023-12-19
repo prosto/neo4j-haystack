@@ -58,9 +58,8 @@ path = "src/neo4j_haystack/__about__.py"
 tag_sign = false
 tag_name = "v{new_version}"
 commit_message = "🚀 Version {new_version}"
-
-[tool.hatch.build]
-include = ["/src/**/*.py"]
+check_dirty = false
+commit = true
 
 [tool.hatch.envs.default]
 features = ["tests"]
@@ -110,11 +109,16 @@ template = "maintain"
 features = ["maintain"]
 
 [tool.hatch.envs.maintain.scripts]
-changelog = "git-changelog -c basic -t angular"
+changelog = "git-changelog"
+bump = [
+  "hatch version {args:.}",
+  "changelog",
+  "git add CHANGELOG.md && git commit --amend --no-edit",
+]
 
 [tool.git-changelog]
-bump = "auto"
-convention = "angular"
+bump = "none"
+convention = "conventional"
 in-place = true
 output = "CHANGELOG.md"
 parse-refs = false
