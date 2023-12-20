@@ -48,7 +48,7 @@ examples = ["datasets"]
 all = ["neo4j-haystack[docker,tests,docs,maintain,quality,typing,examples]"]
 
 [project.urls]
-Documentation = "https://github.com/prosto/neo4j-haystack#readme"
+Documentation = "https://prosto.github.io/neo4j-haystack"
 Issues = "https://github.com/prosto/neo4j-haystack/issues"
 Source = "https://github.com/prosto/neo4j-haystack"
 
