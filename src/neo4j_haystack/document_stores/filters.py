@@ -1,36 +1,24 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-)
-
-from haystack.schema import FilterType
+from typing import Any, ClassVar, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from neo4j_haystack.document_stores.errors import Neo4jFilterParserError
+
+FilterType = Dict[str, Any]
 
 FieldValuePrimitive = Union[int, float, str, bool]
 FieldValueType = Union[FieldValuePrimitive, Iterable[FieldValuePrimitive]]
 
-LOGICAL_OPS = ("$and", "$or", "$not")
+LOGICAL_OPS = ("AND", "OR", "NOT")
 OP_AND, OP_OR, OP_NOT = LOGICAL_OPS
 
-COMPARISON_OPS = ("$eq", "$ne", "$in", "$nin", "$gt", "$gte", "$lt", "$lte", "$exists")
+COMPARISON_OPS = ("==", "!=", "in", "not in", ">", ">=", "<", "<=", "exists")
 OP_EQ, OP_NEQ, OP_IN, OP_NIN, OP_GT, OP_GTE, OP_LT, OP_LTE, OP_EXISTS = COMPARISON_OPS
 
 
 class OpType(Enum):
     LOGICAL = "logical"
     COMPARISON = "comparison"
-    FIELD_NAME = "filed_name"
     UNKNOWN = "unknown"
 
     @staticmethod
@@ -39,8 +27,6 @@ class OpType(Enum):
             return OpType.LOGICAL
         elif op in COMPARISON_OPS:
             return OpType.COMPARISON
-        elif op is not None:
-            return OpType.FIELD_NAME
 
         return OpType.UNKNOWN
 
@@ -58,13 +44,13 @@ class AST:
 
 class LogicalOp(AST):
     """
-    `AST` node which represents a logical operator e.g. "$and", "$or", "$not".
-    Logical operator is comprised of an operator (e.g. "$and") and respective operands - expressions participating in
-    the logical evaluation syntax. For example one could read it the following way: ``"operand1 $and operand2"``, where
-    ``"$and"`` is the operator and ``"operand1", "operand2"`` are `AST` nodes which might evaluate into:
+    `AST` node which represents a logical operator e.g. "AND", "OR", "NOT".
+    Logical operator is comprised of an operator (e.g. "AND") and respective operands - expressions participating in
+    the logical evaluation syntax. For example one could read it the following way: ``"operand1 AND operand2"``, where
+    ``"AND"`` is the operator and ``"operand1", "operand2"`` are `AST` nodes which might evaluate into:
 
-    * simple expressions like ``"field1 = 1 $and field2 >= 2"``
-    * more complex expressions like ``"($field1 = 1 $or $field2 < 4) $and field3 > 2"``
+    * simple expressions like ``"field1 = 1 AND field2 >= 2"``
+    * more complex expressions like ``"(field1 = 1 OR field2 < 4) AND field3 > 2"``
 
     Please notice the actual representation of expressions is managed by a separate component which knows how to parse
     the syntax tree and translate its nodes (`AST`) into DocumentStore's specific filtering syntax.
@@ -89,10 +75,13 @@ class LogicalOp(AST):
 
 class ComparisonOp(AST):
     """
-    This `AST` node represents a comparison operator in filters syntax tree (e.g. "$eq", "$in", "$lte" etc).
-    Comparison operator is comprised of an operator (e.g. "$eq"), a field name and  field value. For example one could
-    read it the following way: ``"age $eq 20"``, where ``"$eq"`` is the operator, ``"age"`` is a field name and "20" is
-    a comparison value.
+    This `AST` node represents a comparison operator in filters syntax tree (e.g. "==", "in", "<=" etc).
+    Comparison operator is comprised of an operator, a field name and field value. For example one could
+    read it in the following way: ``"age == 20"``, where
+
+    - ``"=="`` - is the operator
+    - ``"age"`` - is a field name
+    - "20" - is a comparison value.
 
     Please notice the actual representation of comparison expressions is managed by a separate component which knows how
     to translate the `ComparisonOp` into DocumentStore's specific filtering syntax.
@@ -124,7 +113,7 @@ class FilterParser:
     The implementation of metadata filter parser into an abstract syntax tree comprised of respective
     `AST` nodes. The tree structure has a single root node and, depending on actual filters provided, can result
     into a number of Logical nodes as well as Comparison (leaf) nodes. The parsing logic takes into consideration rules
-    documented in the following document [Metadata Filtering](https://docs.haystack.deepset.ai/docs/metadata-filtering).
+    documented in the following document [Metadata Filtering](https://docs.haystack.deepset.ai/v2.0/docs/metadata-filtering).
 
     `FilterParser` does not depend on actual DocumentStore implementation. Its single purpose is to parse filters into a
     tree of `AST` nodes by applying metadata filtering rules (including default operators behavior).
@@ -133,10 +122,23 @@ class FilterParser:
 
     ```py
     filters = {
-        "$or": [
-            {"$and": {"type": "news", "likes": {"$ne": 100}}},
-            {"$and": {"type": "blog", "likes": {"$gte": 500}}},
-        ]
+        "operator": "OR",
+        "conditions": [
+            {
+                "operator": "AND",
+                "conditions": [
+                    {"field": "meta.type", "operator": "==", "value": "news"},
+                    {"field": "meta.likes", "operator": "!=", "value": 100},
+                ],
+            },
+            {
+                "operator": "AND",
+                "conditions": [
+                    {"field": "meta.type", "operator": "==", "value": "blog"},
+                    {"field": "meta.likes", "operator": ">=", "value": 500},
+                ],
+            },
+        ],
     }
     op_tree = FilterParser().parse(filters)
     ```
@@ -144,31 +146,34 @@ class FilterParser:
     We should expect the following tree structure (`op_tree`) after parsing:
 
     ```console
-                                            +-----------+
-                                            |<LogicalOp>|
-                                            |  op: $or  |
-                                            +-----------+
-                              +-------------+ operands  +----------------+
-                              |             +-----------+                |
-                              |                                          |
-                        +-----+-----+                              +-----+-----+
-                        |<LogicalOp>|                              |<LogicalOp>|
-                        |  op: $and |                              |  op: $and |
-                        +-----------+                              +-----------+
-               +--------+ operands  +------+                 +-----+ operands  +-----------+
-               |        +-----------+      |                 |     +-----------+           |
+                                            +-------------+
+                                            | <LogicalOp> |
+                                            |  op: "OR"   |
+                                            +-------------+
+                              +-------------+  operands   +----------------+
+                              |             +-------------+                |
+                              |                                            |
+                        +-----+-------+                              +-----+-------+
+                        | <LogicalOp> |                              | <LogicalOp> |
+                        |  op: "AND"  |                              |  op: "AND"  |
+                        +-------------+                              +-------------+
+               +--------+  operands   +----+                 +-------+  operands   +-------+
+               |        +-------------+    |                 |       +-------------+       |
                |                           |                 |                             |
     +----------+---------+  +--------------+------+   +------+-------------+   +-----------+---------+
     |   <ComparisonOp>   |  |   <ComparisonOp>    |   |   <ComparisonOp>   |   |   <ComparisonOp>    |
     |                    |  |                     |   |                    |   |                     |
     | field_name: "type" |  | field_name: "likes" |   | field_name: "type" |   | field_name: "likes" |
-    | op: "$eq"          |  | op: "$gte"          |   | op: "$eq"          |   | op: "$ne"           |
+    | op: "=="           |  | op: ">="            |   | op: "=="           |   | op: "!="            |
     | field_value: "blog"|  | field_value: 500    |   | field_value: "news"|   | field_value: 100    |
     +--------------------+  +---------------------+   +--------------------+   +---------------------+
     ```
 
     Having such a tree DocumentStore should be able to traverse it and interpret into a Document Store specific syntax.
     """
+
+    def __init__(self, flatten_field_name=True) -> None:
+        self.flatten_field_name = flatten_field_name
 
     def comparison_op(self, field_name: str, op: str, field_value: FieldValueType) -> ComparisonOp:
         return ComparisonOp(field_name, op, field_value)
@@ -194,107 +199,101 @@ class FilterParser:
 
         return valid_operands[0] if len(valid_operands) == 1 else self.logical_op(default_op, valid_operands)
 
-    def _parse_comparison_op(self, field_name: str, filter_value: FilterType) -> List[ComparisonOp]:
+    def _parse_comparison_op(self, filters: FilterType) -> ComparisonOp:
         """
-        Parsing comparison operator.
-
-        For example a filter `:::py {"age": { "$lt": 25 }}`, where `:::py field_name="age"`
-        and `:::py filter_value={ "$lt": 25 }` will create a `ComparisonOp` with specific field name (``age``),
-        operator (``$lt``) and field value (``25``).
-
-        The implementation also considers cases for implicit comparisons:
-
-        - implicit ``$in`` in case filter value is Iterable/List (e.g. ``"age": [20, 30]``)
-        - implicit ``$eq`` in case filter value is not a list (e.g. ``"age": 20``)
+        Parsing a comparison operator dictionary.
 
         Args:
-            field_name: The name of the metadata field participating in comparison operation.
-            filter_value: Filter value which could be with details bout operator to be used in the comparison
-                expression.
+            filters: Comparison filter dictionary with `field`, `operator` and `value` keys expected.
+
+        Raises:
+            Neo4jFilterParserError: If required `field` or `value` comparison dictionary keys are missing.
 
         Returns:
-            :class:`ComparisonOp` `AST` node representing the comparison expression in abstract syntax tree.
+           `AST` node representing the comparison expression in abstract syntax tree.
         """
-        if isinstance(filter_value, dict):
-            return [self.comparison_op(field_name, op, field_value) for (op, field_value) in filter_value.items()]
 
-        # Checking for implicit "$in" operator (everything Iterable except str is considered)
-        elif isinstance(filter_value, Iterable) and not isinstance(filter_value, str):
-            return [self.comparison_op(field_name, OP_IN, filter_value)]
+        operator = filters["operator"]
+        field_name = filters.get("field")
+        filter_value = filters.get("value")
 
-        # By default return implicit "$eq" operator if `filter_value` is not dict or Iterable
-        return [self.comparison_op(field_name, OP_EQ, filter_value)]
+        if not field_name:
+            raise Neo4jFilterParserError(f"`field` is mandatory in comparison filter dictionary: `{filters}`.")
 
-    def _parse_logical_op(self, op: str, filters: FilterType) -> LogicalOp:
+        if filter_value is None:
+            raise Neo4jFilterParserError(f"`value` is mandatory in comparison filter dictionary: `{filters}`.")
+
+        return self.comparison_op(field_name, operator, filter_value)
+
+    def _parse_logical_op(self, filters: FilterType) -> LogicalOp:
         """
         This method is responsible of parsing logical operators. It returns `LogicalOp` with specific operator
-        (e.g. "$or") and its operands (list of `AST` nodes). Operands are parsed by calling `:::py self._parse_tree`
-        which might result in further recursive parsing flow. For example if `filters` parameter has a value
-        `:::py {"type": "news"}` it will be resolved into comparison operator and added as operand to the current
-        logical operator `op`.
+        (e.g. "OR") and its operands (list of `AST` nodes). Operands are parsed by calling `:::py self._parse_tree`
+        which might result in further recursive parsing flow.
 
         Args:
-            op: The logical operator type (e.g. "$and", "$or" etc).
-            filters: Filter value for the logical operator `op` being parsed.
+            filters: Logical filter with conditions.
+
+        Raises:
+            Neo4jFilterParserError: If required `conditions` logic dictionary key is missing or is not a `list` with at
+                least one item.
 
         Returns:
             The instance of `LogicalOp` with the list parsed operands.
         """
-        operands: List[AST] = []
 
-        if isinstance(filters, dict):
-            operands.extend(self._parse_tree(filters, parent_op=op))
+        op = filters["operator"]
+        conditions = filters.get("conditions")
 
-        # Logical Operators on the Same Level
-        elif isinstance(filters, list):
-            nested_filters = [self._parse_tree(value, parent_op=op) for value in filters]
-            for nested in nested_filters:
-                operands.extend(nested)
+        if not conditions or not isinstance(conditions, list) or len(conditions) < 1:
+            raise Neo4jFilterParserError("Can not parse logical operator with empty or absent conditions")
+
+        operands: List[AST] = [self._parse_tree(condition) for condition in conditions]
 
         return self.logical_op(op, operands)
 
-    def _parse_tree(self, filters: FilterType, *, parent_op: Optional[str] = None) -> List[AST]:
+    def _parse_tree(self, filters: FilterType) -> OperatorAST:
         """
-        This method iterates over filters dictionary (or its chunks) items and identifies operations based on its type,
-        e.g. "$and" would be resolved to a logical operator type (`OpType.LOGICAL`). Once recognized the parsing
-        of the operator and its value will be delegated to a respective method (e.g. "meth:`self._parse_logical_op`).
-
-        Foe example the following `filters` parameter: `:::py {"$and": {"type": "news", "likes": {"$ne": 100}}}` will be
-        recognized as `OpType.LOGICAL` and `:::py _parse_logical_op("$and", {"type": "news", "likes": {"$ne": 100}})`
-        will be called to further proceed with parsing.
-
-        The following `filters` parameter: `:::py "{likes": {"$ne": 100}}` will be recognized as `OpType.FIELD_NAME` and
-        `:::py _parse_comparison_op("likes", {"$ne": 100})` will be called to further proceed with parsing.
+        This parses filters dictionary and identifies operations based on its "operator" type,
+        e.g. "AND" would be resolved to a logical operator type (`OpType.LOGICAL`). Once recognized the parsing
+        of the operator and its filter will be delegated to a respective method (e.g. `self._parse_logical_op` or
+        `self._parse_comparison_op`).
 
         Args:
             filters: Metadata filters dictionary. Could be the full filter value or a smaller filters chunk.
-            parent_op: Allows the logic to recognize filter items which do not have a parent logical operator and
-                create a default one ("AND") as result.
+
+        Raises:
+            Neo4jFilterParserError: If required `operator` dictionary key is missing.
+            Neo4jFilterParserError: If `filters` is not a dictionary.
+            Neo4jFilterParserError: If operator value is unknown.
 
         Returns:
-            A list of parsed `AST` nodes.
+            A root `AST` node of parsed filter.
         """
-        parent_op_type = OpType.from_op(parent_op)
-        nodes: List[AST] = []
 
-        for key, value in filters.items():
-            op_type = OpType.from_op(key)
+        if not isinstance(filters, dict):
+            raise Neo4jFilterParserError("Filter must be a dictionary.")
 
-            if op_type == OpType.LOGICAL:
-                nodes += [self._parse_logical_op(key, value)]
-            elif op_type == OpType.FIELD_NAME:
-                nodes += self._parse_comparison_op(key, value)
+        if "operator" not in filters:
+            raise Neo4jFilterParserError("`operator` must ne present in both comparison and logic dictionaries.")
 
-        # Wrap nodes (operands) into a logical operator (AND - by default)
-        if parent_op_type != OpType.LOGICAL and len(nodes) > 1:
-            return [self.logical_op(OP_AND, nodes)]
+        operator = filters["operator"]
+        op_type = OpType.from_op(operator)
 
-        return nodes
+        if op_type == OpType.LOGICAL:
+            return self._parse_logical_op(filters)
+        elif op_type == OpType.COMPARISON:
+            return self._parse_comparison_op(filters)
+        else:
+            raise Neo4jFilterParserError(
+                f"Unknown operator({operator}) in filter dictionary. Should be either "
+                f"comparison({COMPARISON_OPS}) or logical({LOGICAL_OPS})"
+            )
 
     def parse(self, filters: FilterType) -> OperatorAST:
         """
-        This is the entry point (The method should be called) to parse a given metadata filter into an abstract syntax
-        tree. The implementation delegates the parsing logic to the private `self._parse_tree` method.
+        This is the entry point to parse a given metadata filter into an abstract syntax tree. The implementation
+        delegates the parsing logic to the private `self._parse_tree` method.
 
         Args:
             filters: Metadata filters to be parsed.
@@ -305,21 +304,10 @@ class FilterParser:
 
         Returns:
             Abstract syntax tree representing `filters`. You should expect a single root operator returned, which
-            could used to traverse the whole tree (a starting node).
+            could used to traverse the whole tree.
         """
-        filter_ast = self._parse_tree(filters)
 
-        if len(filter_ast) > 1:
-            raise Neo4jFilterParserError(
-                "Top level filter should always result into a single root element (e.g. $and, $or)"
-            )
-
-        if len(filter_ast) == 0:
-            raise Neo4jFilterParserError(
-                "Please adjust your logic so that empty filters are not considered for parsing"
-            )
-
-        return cast(OperatorAST, filter_ast[0])
+        return self._parse_tree(filters)
 
 
 class NodeVisitor:
@@ -394,10 +382,23 @@ class Neo4jFiltersConverter(NodeVisitor):
     converter = Neo4jFiltersConverter("doc")
 
     filters = {
-        "$or": [
-            {"$and": {"type": "news", "likes": {"$lt": 100}}},
-            {"$and": {"type": "blog", "likes": {"$gte": 500}}},
-        ]
+        "operator": "OR",
+        "conditions": [
+            {
+                "operator": "AND",
+                "conditions": [
+                    {"field": "meta.type", "operator": "==", "value": "news"},
+                    {"field": "meta.likes", "operator": "!=", "value": 100},
+                ],
+            },
+            {
+                "operator": "AND",
+                "conditions": [
+                    {"field": "meta.type", "operator": "==", "value": "blog"},
+                    {"field": "meta.likes", "operator": ">=", "value": 500},
+                ],
+            },
+        ],
     }
 
     filter_ast = parser.parse(filters)
@@ -448,19 +449,27 @@ class Neo4jFiltersConverter(NodeVisitor):
 
     EMPTY_EXPR = ""
 
-    def __init__(self, field_name_prefix: Optional[str] = None, include_null_values_when_not_equal: bool = False):
+    def __init__(
+        self,
+        field_name_prefix: Optional[str] = None,
+        include_null_values_when_not_equal: bool = False,
+        flatten_field_name=True,
+    ):
         """
         Constructs a new `Neo4jFiltersConverter` instance.
 
         Args:
             field_name_prefix: A prefix to be added to field names in Cypher queries (e.g. `:::cypher doc.age = 20`,
-                where ``"doc"`` is the prefix), defaults to None.
+                where ``"doc"`` is the prefix).
             include_null_values_when_not_equal: When `True` will enable additional Cypher expressions for
                 inequality operators "$nin" and "$ne" so that null values are considered as "not equal" instead of being
                 skipped. **This is experimental and by default is disabled**.
+            flatten_field_name: #In case filed names are composite/nested like "meta.age" replace dot (".") with
+                underscores ("_")
         """
         self._field_name_prefix = field_name_prefix
         self._include_null_values_when_not_equal = include_null_values_when_not_equal
+        self._flatten_field_name = flatten_field_name
         self._params: Dict[str, Any] = {}
 
     def convert(self, op_tree: AST) -> Tuple[str, Dict[str, Any]]:
@@ -474,7 +483,7 @@ class Neo4jFiltersConverter(NodeVisitor):
             ('n.age = $fv_age', {'$fv_age': 30})
 
         Args:
-            op_tree: The abstract syntax tree representing a parsed metadata filter. See :class:`FilterParser` to learn
+            op_tree: The abstract syntax tree representing a parsed metadata filter. See `FilterParser` to learn
                 about parsing logic.
 
         Returns:
@@ -495,9 +504,9 @@ class Neo4jFiltersConverter(NodeVisitor):
         If there are more than one operand parentheses are used to group all expressions.
 
         Examples:
-            >>> operand1 = ComparisonOp("age", "$ne", 20)
-            >>> operand2 = ComparisonOp("age", "$lte", 30)
-            >>> logical_op = LogicalOp([operand1, operand2], "$or")
+            >>> operand1 = ComparisonOp("age", "!=", 20)
+            >>> operand2 = ComparisonOp("age", "<=", 30)
+            >>> logical_op = LogicalOp([operand1, operand2], "OR")
             >>> self.visit_logical_op(operator)
             "(doc.age <> 20 OR doc.age <= 30"
 
@@ -522,11 +531,11 @@ class Neo4jFiltersConverter(NodeVisitor):
         Parameter names are unique in order to avoid clashes between potentially multiple comparison operators.
 
         Examples:
-            >>> operator = ComparisonOp("age", "$ne", 20)
+            >>> operator = ComparisonOp("age", "!=", 20)
             >>> self.visit_comparison_op(operator)
             "doc.age <> 20"
 
-            >>> operator = ComparisonOp("age", "$in", [10, 11])
+            >>> operator = ComparisonOp("age", "in", [10, 11])
             >>> self.visit_comparison_op(operator)
             "doc.age IN [10, 11]"
 
@@ -579,15 +588,15 @@ class Neo4jFiltersConverter(NodeVisitor):
 
     def _op_exists(self, param: CypherFieldParam) -> CypherQueryExpression:
         """
-        Translates ``"$exists"`` metadata filter into ``"IS NULL / IS NOT NULL"`` Cypher expression. Useful for checking
-        absent properties. See more details in neo4j documentation:
+        Translates ``"exists"`` metadata filter into ``"IS NULL / IS NOT NULL"`` Cypher expression. Useful for checking
+        absent properties. See more details in Neo4j documentation:
 
-        - [Filter on null](https://neo4j.com/docs/cypher-manual/current/clauses/where/#filter-on-null)
+        - [Filter on `null`](https://neo4j.com/docs/cypher-manual/current/clauses/where/#filter-on-null)
         - [Property existence checking](https://neo4j.com/docs/cypher-manual/current/clauses/where/#property-existence-checking)
 
         An example metadata filter would look as follows `:::py { "age": { "$exists": True } }`, which translates into
-        `::cypher "doc.age IS NOT NULL"` Cypher expression. With `False` in the filter value expression would become
-        `:::cypher "doc.age IS NULL"`.
+        `::cypher doc.age IS NOT NULL` Cypher expression. With `False` in the filter value expression would become
+        `:::cypher doc.age IS NULL`.
 
         Args:
             param: Field parameter metadata to be use in he Cypher expression.
@@ -599,13 +608,13 @@ class Neo4jFiltersConverter(NodeVisitor):
 
     def _op_neq(self, param: CypherFieldParam) -> CypherQueryExpression:
         """
-        Translates ``"$ne"`` (not equal) metadata filter into ``"<>"`` Cypher expression.
+        Translates ``"!="`` (not equal) metadata filter into ``"<>"`` Cypher expression.
 
         Args:
             param: Field parameter metadata to be use in he Cypher expression.
 
         Returns:
-            Cypher expression using Cypher inequality operator, e.g. `::: cypher"doc.age <> 18"`.
+            Cypher expression using Cypher inequality operator, e.g. `:::cypher doc.age <> 18`.
         """
         return self._cypher_expression(
             self._wrap_in_parentheses(
@@ -618,12 +627,12 @@ class Neo4jFiltersConverter(NodeVisitor):
 
     def _op_in(self, param: CypherFieldParam) -> CypherQueryExpression:
         """
-        Translates ``"$in"`` (element exists in a list) metadata filter into ``"IN"`` Cypher expression.
-        See more details in neo4j documentation:
+        Translates ``"in"`` (element exists in a list) metadata filter into ``"IN"`` Cypher expression.
+        See more details in Neo4j documentation:
 
         - [IN operator](https://neo4j.com/docs/cypher-manual/current/clauses/where/#where-in-operator)
         - [Conditional expressions](https://neo4j.com/docs/cypher-manual/current/queries/case/)
-        - [Function any()](https://neo4j.com/docs/cypher-manual/current/functions/predicate/#functions-any)
+        - [Function ``any()``](https://neo4j.com/docs/cypher-manual/current/functions/predicate/#functions-any)
 
         Please notice a combination of "CASE" expression and "IN" operator are being used to comply with
         all metadata filtering options. In simple cases we would expect the following Cypher expression to be built:
@@ -646,9 +655,9 @@ class Neo4jFiltersConverter(NodeVisitor):
 
     def _op_nin(self, param: CypherFieldParam) -> CypherQueryExpression:
         """
-        Translates ``"$nin"`` (element not in a list) metadata filter into ``"NOT..IN"`` Cypher expression. See the
-        documentation of the [_op_in][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter._op_in] method for
-        more details.
+        Translates ``"not in"`` (element **not** in a list) metadata filter into ``"NOT..IN"`` Cypher expression. See
+        the documentation of the [_op_in][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter._op_in] method
+        for more details.
 
         Additional "IS NULL" expression will be added if such configuration is enabled. See implementation of
             [_field_is_null_expr][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter._field_is_null_expr].
@@ -681,7 +690,7 @@ class Neo4jFiltersConverter(NodeVisitor):
             param: Field parameter metadata to be use in he Cypher expression.
 
         Returns:
-            Cypher expression using Cypher operator, e.g. `:::cypher "doc.age > 18"`
+            Cypher expression using Cypher operator, e.g. `:::cypher doc.age > 18`
         """
         return self._cypher_expression(f"{param.field_name} {param.op} {param.field_param_ref}", param)
 
@@ -754,11 +763,15 @@ class Neo4jFiltersConverter(NodeVisitor):
             CypherFieldParam: data class with required field parameter metadata.
         """
 
-        field_param_name = self._generate_param_name(node.field_name)
+        field_name = node.field_name
+        if "." in field_name and self._flatten_field_name:
+            field_name = field_name.replace(".", "_")
+
+        field_param_name = self._generate_param_name(field_name)
         field_value = self._normalize_field_type(node.field_value)
 
         return CypherFieldParam(
-            field_name=f"{self._field_name_prefix}.{node.field_name}" if self._field_name_prefix else node.field_name,
+            field_name=f"{self._field_name_prefix}.{field_name}" if self._field_name_prefix else field_name,
             field_param_name=field_param_name,
             field_param_ref=f"${field_param_name}",
             field_value=field_value,
