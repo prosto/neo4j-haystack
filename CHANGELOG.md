@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
-## [2.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/2.0.0) - 2024-01-15
+## [v2.0.1](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.1) - 2024-01-15
 
-<small>[Compare with v1.0.0](https://github.com/prosto/neo4j-haystack/compare/v1.0.0...2.0.0)</small>
+<small>[Compare with v2.0.0](https://github.com/prosto/neo4j-haystack/compare/v2.0.0...v2.0.1)</small>
+
+### Bug Fixes
+
+- Rename metadata slot to meta in example pipelines ([1831d40](https://github.com/prosto/neo4j-haystack/commit/1831d4071bacd1cff4cd99f186cf7a7a1a4d1edc) by Sergey Bondarenco).
+
+## [v2.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.0) - 2024-01-15
+
+<small>[Compare with v1.0.0](https://github.com/prosto/neo4j-haystack/compare/v1.0.0...v2.0.0)</small>
 
 ### Build
 
