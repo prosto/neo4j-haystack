@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [2.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/2.0.0) - 2024-01-15
+
+<small>[Compare with v1.0.0](https://github.com/prosto/neo4j-haystack/compare/v1.0.0...2.0.0)</small>
+
+### Build
+
+- Update haystack dependency to 2.0 ([bd3e925](https://github.com/prosto/neo4j-haystack/commit/bd3e92543674ab4f3dd8f988a3bc882bbd00042a) by Sergey Bondarenco).
+
+### Features
+
+- Update examples based on haystack 2.0 pipelines ([a7e3bf1](https://github.com/prosto/neo4j-haystack/commit/a7e3bf1788ac9f6b87e82497740feea056386f87) by Sergey Bondarenco).
+- Retriever component for documents stored in Neo4j ([b411ebc](https://github.com/prosto/neo4j-haystack/commit/b411ebc5f850272e0050307f03cc6157b7bc6e26) by Sergey Bondarenco).
+- Update DocumentStore protocol implementation to match haystack 2.0 requirements ([9748e7d](https://github.com/prosto/neo4j-haystack/commit/9748e7d4f27087b80c8f028b8612f76ed1daf8a8) by Sergey Bondarenco).
+- Update metadata filter parser for document store ([6ce780c](https://github.com/prosto/neo4j-haystack/commit/6ce780c846576d690b7216e37793532841a54dc3) by Sergey Bondarenco).
+
+### Code Refactoring
+
+- Organize modules into packages for better separation of concerns ([6a101e8](https://github.com/prosto/neo4j-haystack/commit/6a101e8047bcd2dac2b49598701f7233390bae88) by Sergey Bondarenco).
+- Change name of retriever component as per documented naming convention ([f79a952](https://github.com/prosto/neo4j-haystack/commit/f79a952fbe59be0d1d5d13e03ae58401f6403ce9) by Sergey Bondarenco).
+
 ## [v1.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/v1.0.0) - 2023-12-19
 
 <small>[Compare with first commit](https://github.com/prosto/neo4j-haystack/compare/f801a10c8cf6eb7d784c77d8b72005cf5985dffc...v1.0.0)</small>
