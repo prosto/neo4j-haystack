@@ -22,7 +22,7 @@ nav:
       - FilterParser: reference/metadata_filter/parser.md
       - Neo4jQueryConverter: reference/metadata_filter/neo4j_query_converter.md
     - errors: reference/errors.md
-  - Haystack Documentation: https://docs.haystack.deepset.ai/docs
+  - Haystack Documentation: https://docs.haystack.deepset.ai/v2.0/docs/intro
 
 theme:
   name: material
