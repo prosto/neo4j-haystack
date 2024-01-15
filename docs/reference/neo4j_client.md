@@ -1,2 +1,1 @@
-::: neo4j_haystack.document_stores.neo4j_client
-
+::: neo4j_haystack.client.neo4j_client

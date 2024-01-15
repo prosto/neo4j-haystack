@@ -78,9 +78,9 @@ class Neo4jClientConfig:
 
     It combines several configuration levels for each entity used by python driver to communicate with a database:
 
-    - [Driver Configuration][neo4j_haystack.document_stores.neo4j_client.Neo4jDriverConfig]
-    - [Session Configuration][neo4j_haystack.document_stores.neo4j_client.Neo4jSessionConfig]
-    - [Transaction Configuration][neo4j_haystack.document_stores.neo4j_client.Neo4jTransactionConfig]
+    - [Driver Configuration][neo4j_haystack.client.neo4j_client.Neo4jDriverConfig]
+    - [Session Configuration][neo4j_haystack.client.neo4j_client.Neo4jSessionConfig]
+    - [Transaction Configuration][neo4j_haystack.client.neo4j_client.Neo4jTransactionConfig]
 
     Developers can pick up configuration properties for each entity (e.g. session) which will be applied during
     transaction invocations. For example, ``driver_config={"connection_timeout": 30}`` will set amount of time in
@@ -315,7 +315,7 @@ class Neo4jClient:
     ):
         """
         Creates a vector index in case it does not exist in database.
-        Uses same parameters as [create_index][neo4j_haystack.document_stores.neo4j_client.Neo4jClient.create_index] \
+        Uses same parameters as [create_index][neo4j_haystack.client.neo4j_client.Neo4jClient.create_index] \
             method.
         """
 
@@ -491,7 +491,7 @@ class Neo4jClient:
         Note:
             Please notice results are yielded while read transaction is still open. That should impact your choice of
             transaction timeout setting, see \
-                [Neo4jClientConfig][neo4j_haystack.document_stores.neo4j_client.Neo4jClientConfig].
+                [Neo4jClientConfig][neo4j_haystack.client.neo4j_client.Neo4jClientConfig].
 
         Args:
             query: Cypher query to run in Neo4j.

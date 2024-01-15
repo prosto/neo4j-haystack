@@ -16,9 +16,12 @@ nav:
     - License: license.md
   - Code Reference:
     - Neo4jDocumentStore: reference/neo4j_store.md
+    - Neo4jRetriever: reference/neo4j_retriever.md
     - Neo4jClient: reference/neo4j_client.md
-    - FilterParser: reference/filters.md
-    - Errors: reference/errors.md
+    - MetadataFilter:
+      - FilterParser: reference/metadata_filter/parser.md
+      - Neo4jQueryConverter: reference/metadata_filter/neo4j_query_converter.md
+    - errors: reference/errors.md
   - Haystack Documentation: https://docs.haystack.deepset.ai/docs
 
 theme:

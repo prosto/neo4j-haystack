@@ -55,7 +55,7 @@ You could point your IDE to this particular python environment/interpreter.
 1. if you updated the documentation or the project dependencies:
     1. run `hatch run docs:serve`
     1. go to http://localhost:8000/neo4j-haystack/ and check that everything looks good
-1. follow our [commit message convention](#commit-message-convention)
+1. follow [commit message convention](#commit-message-convention)
 
 Don't bother updating the changelog, we will take care of this.
 

@@ -194,10 +194,10 @@ class Neo4jDynamicDocumentRetriever:
     `Neo4jDynamicDocumentRetriever` will convert properties of the node (e.g. `id`, `content` etc) to
     `haystack.Document` type.
 
-    (2) Converting documents from query output keys (e.g. column aliases)
+    (2) Converting documents from query output keys (e.g. [column aliases](https://neo4j.com/docs/cypher-manual/current/clauses/return/#return-column-alias))
 
     You might want to run a complex query which aggregates information from multiple sources (nodes) in Neo4j. In such
-    case you might want to compose final Document from
+    case you can compose final Document from several dta points.
 
     ```py title="Convert Neo4j `node` to `haystack.Document`"
     # Configuration with default settings
@@ -348,7 +348,7 @@ class Neo4jDynamicDocumentRetriever:
         data["init_parameters"]["client_config"] = client_config
         return default_from_dict(cls, data)
 
-    def run(self, query: str, parameters: Optional[Dict[str, Any]] = None, **kwargs):
+    def run(self, query: str, parameters: Optional[Dict[str, Any]] = None, **kwargs: Dict[str, Any]):
         """
         Runs the arbitrary Cypher `query` with `parameters` and returns Documents.
 

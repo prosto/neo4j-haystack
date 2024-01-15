@@ -1,1 +1,1 @@
-::: neo4j_haystack.document_stores.errors
+::: neo4j_haystack.errors

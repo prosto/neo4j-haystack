@@ -85,7 +85,7 @@ class Neo4jQueryConverter(NodeVisitor):
 
     ```python
     parser = FilterParser()
-    converter = Neo4jFiltersConverter("doc")
+    converter = Neo4jQueryConverter("doc")
 
     filters = {
         "operator": "OR",
@@ -158,20 +158,20 @@ class Neo4jQueryConverter(NodeVisitor):
     def __init__(
         self,
         field_name_prefix: Optional[str] = None,
-        include_null_values_when_not_equal: bool = False,
-        flatten_field_name=True,
+        include_null_values_when_not_equal: Optional[bool] = False,
+        flatten_field_name: Optional[bool] = True,
     ):
         """
-        Constructs a new `Neo4jFiltersConverter` instance.
+        Constructs a new `Neo4jQueryConverter` instance.
 
         Args:
             field_name_prefix: A prefix to be added to field names in Cypher queries (e.g. `:::cypher doc.age = 20`,
                 where ``"doc"`` is the prefix).
             include_null_values_when_not_equal: When `True` will enable additional Cypher expressions for
-                inequality operators "$nin" and "$ne" so that null values are considered as "not equal" instead of being
-                skipped. **This is experimental and by default is disabled**.
-            flatten_field_name: #In case filed names are composite/nested like "meta.age" replace dot (".") with
-                underscores ("_")
+                inequality operators "not in" and "!=" so that `null` values are considered as "not equal" instead of
+                being skipped. **This is experimental and by default is disabled**.
+            flatten_field_name: In case filed names are composite/nested like "meta.age" replace dot (".") with
+                underscores ("_").
         """
         self._field_name_prefix = field_name_prefix
         self._include_null_values_when_not_equal = include_null_values_when_not_equal
@@ -185,7 +185,7 @@ class Neo4jQueryConverter(NodeVisitor):
 
         Examples:
             >>> op_tree = FilterParser().parse({ "age", 30 })
-            >>> Neo4jFiltersConverter("n").convert(op_tree)
+            >>> Neo4jQueryConverter("n").convert(op_tree)
             ('n.age = $fv_age', {'$fv_age': 30})
 
         Args:
@@ -362,11 +362,11 @@ class Neo4jQueryConverter(NodeVisitor):
     def _op_nin(self, param: CypherFieldParam) -> CypherQueryExpression:
         """
         Translates ``"not in"`` (element **not** in a list) metadata filter into ``"NOT..IN"`` Cypher expression. See
-        the documentation of the [_op_in][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter._op_in] method
-        for more details.
+        documentation of the [_op_in][neo4j_haystack.metadata_filter.neo4j_query_converter.Neo4jQueryConverter._op_in]
+        method for more details.
 
         Additional "IS NULL" expression will be added if such configuration is enabled. See implementation of
-            [_field_is_null_expr][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter._field_is_null_expr].
+            [_field_is_null_expr][neo4j_haystack.metadata_filter.neo4j_query_converter.Neo4jQueryConverter._field_is_null_expr].
 
         Args:
             param: Field parameter metadata to be use in he Cypher expression.
