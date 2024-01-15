@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["farm-haystack>=1.20.0", "neo4j>=5.8.1", "tqdm"]
+dependencies = ["haystack-ai", "neo4j>=5.8.1"]
 
 [project.optional-dependencies]
 docker = ["docker"]
@@ -31,7 +31,7 @@ tests = [
   "coverage[toml]>=6.5",
   "pytest",
   "neo4j-haystack[docker]",
-  "farm-haystack[inference]>=1.20.0",
+  "sentence-transformers>=2.2.0",
 ]
 docs = [
   "mkdocs>=1.3",
