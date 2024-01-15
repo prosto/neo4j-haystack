@@ -110,7 +110,7 @@ template = "maintain"
 features = ["maintain"]
 
 [tool.hatch.envs.maintain.scripts]
-changelog = "git-changelog --bump {args:.}"
+changelog = "git-changelog --bump 'v{args:.}'"
 bump = [
   "changelog",              # this will update CHANGELOG.md
   "hatch version {args:.}", # this will bump version in __about__.py and commit CHANGELOG.md with new tag
