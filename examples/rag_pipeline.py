@@ -6,7 +6,7 @@ from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.embedders import SentenceTransformersTextEmbedder
 from haystack.components.generators import HuggingFaceTGIGenerator
 
-from neo4j_haystack import Neo4jDocumentRetriever, Neo4jDocumentStore
+from neo4j_haystack import Neo4jDocumentStore, Neo4jEmbeddingRetriever
 
 # Load HF Token from environment variables.
 HF_TOKEN = os.environ.get("HF_TOKEN")
@@ -46,7 +46,7 @@ rag_pipeline.add_component(
     "query_embedder",
     SentenceTransformersTextEmbedder(model_name_or_path="sentence-transformers/all-MiniLM-L6-v2", progress_bar=False),
 )
-rag_pipeline.add_component("retriever", Neo4jDocumentRetriever(document_store=document_store))
+rag_pipeline.add_component("retriever", Neo4jEmbeddingRetriever(document_store=document_store))
 rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
 rag_pipeline.add_component(
     "llm",

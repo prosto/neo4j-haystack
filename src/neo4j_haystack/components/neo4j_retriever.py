@@ -13,7 +13,7 @@ from neo4j_haystack.document_stores.neo4j_client import Neo4jClient, Neo4jClient
 
 
 @component
-class Neo4jDocumentRetriever:
+class Neo4jEmbeddingRetriever:
     """
     A component for retrieving documents from Neo4jDocumentStore.
 
@@ -21,7 +21,7 @@ class Neo4jDocumentRetriever:
     from haystack import Document, Pipeline
     from haystack.components.embedders import SentenceTransformersTextEmbedder
 
-    from neo4j_haystack import Neo4jDocumentStore, Neo4jDocumentRetriever
+    from neo4j_haystack import Neo4jDocumentStore, Neo4jEmbeddingRetriever
 
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -33,7 +33,7 @@ class Neo4jDocumentRetriever:
 
     pipeline = Pipeline()
     pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model_name_or_path=model_name))
-    pipeline.add_component("retriever", Neo4jDocumentRetriever(document_store=document_store))
+    pipeline.add_component("retriever", Neo4jEmbeddingRetriever(document_store=document_store))
     pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
 
     result = pipeline.run(
@@ -60,7 +60,7 @@ class Neo4jDocumentRetriever:
         return_embedding: bool = False,
     ):
         """
-        Create a Neo4jDocumentRetriever component.
+        Create a Neo4jEmbeddingRetriever component.
 
         Args:
             document_store: An instance of `Neo4jDocumentStore`.
@@ -101,7 +101,7 @@ class Neo4jDocumentRetriever:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Neo4jDocumentRetriever":
+    def from_dict(cls, data: Dict[str, Any]) -> "Neo4jEmbeddingRetriever":
         """
         Deserialize this component from a dictionary.
         """
