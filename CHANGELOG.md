@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
-## [1.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/v1.0.00.1.0) - 2023-12-19
+## [v1.0.0](https://github.com/prosto/neo4j-haystack/releases/tag/v1.0.0) - 2023-12-19
 
 <small>[Compare with first commit](https://github.com/prosto/neo4j-haystack/compare/f801a10c8cf6eb7d784c77d8b72005cf5985dffc...v1.0.0)</small>
 

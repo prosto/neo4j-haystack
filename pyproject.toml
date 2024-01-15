@@ -58,6 +58,7 @@ path = "src/neo4j_haystack/__about__.py"
 tag_sign = false
 tag_name = "v{new_version}"
 commit_message = "🚀 Version {new_version}"
+commit_extra_args = ["-a"]                 # make sure all other updates get into single commit
 check_dirty = false
 commit = true
 
@@ -109,11 +110,10 @@ template = "maintain"
 features = ["maintain"]
 
 [tool.hatch.envs.maintain.scripts]
-changelog = "git-changelog"
+changelog = "git-changelog --bump {args:.}"
 bump = [
-  "hatch version {args:.}",
-  "changelog",
-  "git add CHANGELOG.md && git commit --amend --no-edit",
+  "changelog",              # this will update CHANGELOG.md
+  "hatch version {args:.}", # this will bump version in __about__.py and commit CHANGELOG.md with new tag
 ]
 
 [tool.git-changelog]
