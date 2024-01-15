@@ -1,5 +1,6 @@
 import logging
-from dataclasses import asdict, dataclass, field
+import os
+from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
@@ -13,7 +14,9 @@ from typing import (
     cast,
 )
 
+from haystack import default_from_dict, default_to_dict
 from neo4j import (
+    Auth,
     GraphDatabase,
     ManagedTransaction,
     Record,
@@ -29,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 NODE_VAR = "doc"
 """Default variable name used in Cypher queries to match and return Documents, e.g.
-`:::cypher match(doc:Document) where doc.id = $id return doc`."""
+`:::cypher match(doc:Document) where doc.id = $id return doc` where `doc` is a variable name."""
 
 Neo4jRecord = Dict[str, Any]
 """Type alias for data items returned from Neo4j queries"""
@@ -109,18 +112,49 @@ class Neo4jClientConfig:
     session_config: Neo4jSessionConfig = field(default_factory=dict)
     transaction_config: Neo4jTransactionConfig = field(default_factory=dict)
 
+    use_env: Optional[bool] = field(default=False)
+    auth: Optional[Auth] = field(default=None)
+
     def __post_init__(self):
+        if self.use_env:
+            self.url = os.getenv("NEO4J_URL", self.url)
+            self.database = os.getenv("NEO4J_DATABASE", self.database)
+            self.username = os.getenv("NEO4J_USERNAME", self.username)
+            self.password = os.getenv("NEO4J_PASSWORD", self.password)
+
         if self.username and self.password:
-            self.driver_config["auth"] = (self.username, self.password)
+            self.auth = (self.username, self.password)
 
         if not self.url:
             raise ValueError("The `url` attribute is mandatory to connect to database.")
 
-        if not self.driver_config.get("auth"):
+        if not self.auth:
             raise ValueError("Please provide either (`username`, `password`) or `auth` fields for authentication.")
 
-    def asdict(self) -> Dict[str, Any]:
-        return asdict(self)
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Serializes client configuration to a dictionary.
+        """
+        data = default_to_dict(
+            self,
+            url=self.url,
+            database=self.database,
+            username=self.username,
+            password=self.password,
+            driver_config=self.driver_config,
+            session_config=self.session_config,
+            transaction_config=self.transaction_config,
+            use_env=self.use_env,
+        )
+
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Neo4jClientConfig":
+        """
+        Deserializes client configuration from a dictionary.
+        """
+        return default_from_dict(cls, data)
 
 
 class Neo4jClient:
@@ -145,7 +179,7 @@ class Neo4jClient:
         if not config.url:
             raise ValueError("`Neo4jClientConfig.url` is mandatory attribute when trying to connect to Neo4j database.")
 
-        self._driver = GraphDatabase.driver(config.url, **config.driver_config)
+        self._driver = GraphDatabase.driver(config.url, auth=config.auth, **config.driver_config)
         self._filter_converter = Neo4jFiltersConverter(NODE_VAR)
 
     def delete_nodes(self, node_label: str, filter_ast: Optional[AST] = None) -> None:
@@ -416,17 +450,7 @@ class Neo4jClient:
         fetch_size: int = 1000,
     ) -> Generator[Neo4jRecord, None, None]:
         """
-        Search for nodes matching a given label and filters. The implementation is based on ``Unmanaged Transactions``
-        for greater control and possibility to ``yield`` results as soon as those are fetched from database. The Neo4j
-        python driver internally manages a buffer which replenished while records are being consumed thus making sure we
-        do not store all fetched records in memory. That greatly simplifies batching mechanism as it is implemented by
-        the buffer. See more details about how python driver implements \
-        [Explicit/Unmanaged Transactions](https://neo4j.com/docs/api/python-driver/current/api.html#explicit-transactions-unmanaged-transactions)
-
-        Note:
-            Please notice results are yielded while read transaction is still open. That should impact your choice of
-            transaction timeout setting, see \
-                [Neo4jClientConfig][neo4j_haystack.document_stores.neo4j_client.Neo4jClientConfig].
+        Search for nodes matching a given label and metadata filters.
 
         Args:
             node_label: The label of the nodes to match (e.g. ``"Document"``).
@@ -440,23 +464,55 @@ class Neo4jClient:
         Returns:
             Found records matching search criteria.
         """
+        where_clause, where_params = self._where_clause(filter_ast)
+        query = f"""
+            MATCH ({NODE_VAR}:`{node_label}`)
+            {where_clause}
+            RETURN {NODE_VAR}{self._map_projection(skip_properties)}
+            """
+
+        for record in self.query_nodes(query=query, parameters={**where_params}, fetch_size=fetch_size):
+            yield cast(Neo4jRecord, record.data().get(NODE_VAR))
+
+    def query_nodes(
+        self,
+        query: str,
+        parameters: Optional[Dict[str, Any]] = None,
+        fetch_size: int = 1000,
+    ) -> Generator[Record, None, None]:
+        """
+        Runs a given Cypher `query`. The implementation is based on ``Unmanaged Transactions``
+        for greater control and possibility to ``yield`` results as soon as those are fetched from database. The Neo4j
+        python driver internally manages a buffer which replenished while records are being consumed thus making sure we
+        do not store all fetched records in memory. That greatly simplifies batching mechanism as it is implemented by
+        the buffer. See more details about how python driver implements \
+        [Explicit/Unmanaged Transactions](https://neo4j.com/docs/api/python-driver/current/api.html#explicit-transactions-unmanaged-transactions)
+
+        Note:
+            Please notice results are yielded while read transaction is still open. That should impact your choice of
+            transaction timeout setting, see \
+                [Neo4jClientConfig][neo4j_haystack.document_stores.neo4j_client.Neo4jClientConfig].
+
+        Args:
+            query: Cypher query to run in Neo4j.
+            parameters: Query parameters which can be used as placeholders in the `query`.
+            fetch_size: Controls how many records are fetched at once from the database which helps with batching
+                process.
+
+        Returns:
+            Records containing data specified in ``RETURN`` Cypher query statement.
+        """
         with self._begin_session(fetch_size=fetch_size) as session:
             with session.begin_transaction(
                 metadata=self._config.transaction_config.get("metadata"),
                 timeout=self._config.transaction_config.get("timeout"),
             ) as tx:
                 try:
-                    where_clause, where_params = self._where_clause(filter_ast)
                     result: Result = tx.run(
-                        f"""
-                        MATCH ({NODE_VAR}:`{node_label}`)
-                        {where_clause}
-                        RETURN {NODE_VAR}{self._map_projection(skip_properties)}
-                        """,
-                        parameters={**where_params},
+                        query,
+                        parameters=parameters,
                     )
-                    for record in result:
-                        yield cast(Neo4jRecord, record.data().get(NODE_VAR))
+                    yield from result
                 finally:
                     tx.close()
 
