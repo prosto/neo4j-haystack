@@ -8,8 +8,8 @@ from haystack import (
     default_to_dict,
 )
 
+from neo4j_haystack.client import Neo4jClient, Neo4jClientConfig
 from neo4j_haystack.document_stores import Neo4jDocumentStore
-from neo4j_haystack.document_stores.neo4j_client import Neo4jClient, Neo4jClientConfig
 
 
 @component

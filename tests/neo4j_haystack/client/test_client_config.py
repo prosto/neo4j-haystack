@@ -1,7 +1,7 @@
 import pytest
 from neo4j import basic_auth
 
-from neo4j_haystack.document_stores.neo4j_client import Neo4jClientConfig
+from neo4j_haystack.client import Neo4jClientConfig
 
 
 @pytest.mark.unit
@@ -37,7 +37,7 @@ def test_client_config_to_dict():
     data = config.to_dict()
 
     assert data == {
-        "type": "neo4j_haystack.document_stores.neo4j_client.Neo4jClientConfig",
+        "type": "neo4j_haystack.client.neo4j_client.Neo4jClientConfig",
         "init_parameters": {
             "url": "bolt://localhost:7687",
             "database": "neo4j",
@@ -54,7 +54,7 @@ def test_client_config_to_dict():
 @pytest.mark.unit
 def test_client_config_from_dict():
     data = {
-        "type": "neo4j_haystack.document_stores.neo4j_client.Neo4jClientConfig",
+        "type": "neo4j_haystack.client.neo4j_client.Neo4jClientConfig",
         "init_parameters": {
             "url": "bolt://localhost:7687",
             "database": "neo4j",

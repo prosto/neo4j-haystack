@@ -25,8 +25,8 @@ from neo4j import (
     unit_of_work,
 )
 
-from neo4j_haystack.document_stores.errors import Neo4jClientError
-from neo4j_haystack.document_stores.filters import AST, Neo4jFiltersConverter
+from neo4j_haystack.errors import Neo4jClientError
+from neo4j_haystack.metadata_filter import AST, Neo4jQueryConverter
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ class Neo4jClient:
     Attributes:
         _config: Neo4j configuration options.
         _driver: An instance of [neo4j.Driver][] which is used to start a session for transaction execution.
-        _filter_converter: Instance of `Neo4jFiltersConverter` which converts parsed Metadata filters to Cypher
+        _filter_converter: Instance of `Neo4jQueryConverter` which converts parsed Metadata filters to Cypher
             queries.
     """
 
@@ -180,7 +180,7 @@ class Neo4jClient:
             raise ValueError("`Neo4jClientConfig.url` is mandatory attribute when trying to connect to Neo4j database.")
 
         self._driver = GraphDatabase.driver(config.url, auth=config.auth, **config.driver_config)
-        self._filter_converter = Neo4jFiltersConverter(NODE_VAR)
+        self._filter_converter = Neo4jQueryConverter(NODE_VAR)
 
     def delete_nodes(self, node_label: str, filter_ast: Optional[AST] = None) -> None:
         """
@@ -537,7 +537,7 @@ class Neo4jClient:
             top_k: Number of results to return from vector search.
             embedding: The query vector (a ``LIST<FLOAT>``) in which to search for the neighborhood.
             filter_ast: Additional filters translated into `WHERE` Cypher clause by \
-                [Neo4jFiltersConverter][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter]
+                [Neo4jQueryConverter][neo4j_haystack.metadata_filter.Neo4jQueryConverter]
             skip_properties: Properties we would like **not** to return as part of data payload. Is uses map projection
                 Cypher syntax, e.g. `:::cypher doc{.*, embedding: null}` - such construct will make sure `embedding` is
                 not returned back in results.
@@ -673,7 +673,7 @@ class Neo4jClient:
 
         Args:
             filter_ast: Filters AST to be converted into Cypher query by \
-                [Neo4jFiltersConverter.convert][neo4j_haystack.document_stores.filters.Neo4jFiltersConverter.convert].
+                [Neo4jQueryConverter.convert][neo4j_haystack.metadata_filter.Neo4jQueryConverter.convert].
         Returns:
             ``WHERE`` filter clause used in filtering logic (e.g. `:::cypher WHERE doc.age > $age`) as well as
             parameters used in the clause  (e.g. `:::py {"age": 25}`)

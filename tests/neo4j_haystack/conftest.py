@@ -14,8 +14,8 @@ from haystack.components.embedders import (
 )
 from neo4j import Driver, GraphDatabase
 
-from neo4j_haystack.document_stores.neo4j_client import Neo4jClientConfig
-from neo4j_haystack.document_stores.neo4j_store import Neo4jDocumentStore
+from neo4j_haystack.client import Neo4jClientConfig
+from neo4j_haystack.document_stores import Neo4jDocumentStore
 
 NEO4J_PORT = 7689
 EMBEDDING_DIM = 768

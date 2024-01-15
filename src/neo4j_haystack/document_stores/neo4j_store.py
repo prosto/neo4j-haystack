@@ -7,13 +7,9 @@ from haystack.document_stores import DuplicateDocumentError, DuplicatePolicy
 from neo4j.exceptions import DatabaseError
 from tqdm import tqdm
 
-from neo4j_haystack.document_stores.filters import OP_IN, FilterParser, OperatorAST
-from neo4j_haystack.document_stores.neo4j_client import (
-    Neo4jClient,
-    Neo4jClientConfig,
-    Neo4jRecord,
-)
+from neo4j_haystack.client import Neo4jClient, Neo4jClientConfig, Neo4jRecord
 from neo4j_haystack.document_stores.utils import get_batches_from_generator
+from neo4j_haystack.metadata_filter import COMPARISON_OPS, FilterParser, OperatorAST
 
 logger = logging.getLogger(__name__)
 
@@ -409,7 +405,7 @@ class Neo4jDocumentStore:
 
         documents: List[Document] = []
         for batch_ids in get_batches_from_generator(document_ids, batch_size):
-            filter_ast = self.filter_parser.comparison_op("id", OP_IN, list(batch_ids))
+            filter_ast = self.filter_parser.comparison_op("id", COMPARISON_OPS.OP_IN, list(batch_ids))
             records = self.neo4j_client.find_nodes(self.node_label, filter_ast)
             documents.extend([self._neo4j_record_to_document(rec) for rec in records])
 
@@ -644,7 +640,7 @@ class Neo4jDocumentStore:
             A syntax tree representing `filters` with additional conditions if any. `None` if none of conditions
             are defined.
         """
-        ids_ast = self.filter_parser.comparison_op("id", OP_IN, ids) if ids else None
+        ids_ast = self.filter_parser.comparison_op("id", COMPARISON_OPS.OP_IN, ids) if ids else None
         filter_ast = self.filter_parser.parse(filters) if filters else None
 
         return self.filter_parser.combine(ids_ast, filter_ast)

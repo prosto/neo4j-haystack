@@ -4,12 +4,8 @@ from typing import Any, ContextManager, Dict, Literal
 
 import pytest
 
-from neo4j_haystack.document_stores.errors import Neo4jFilterParserError
-from neo4j_haystack.document_stores.filters import (
-    FilterParser,
-    FilterType,
-    Neo4jFiltersConverter,
-)
+from neo4j_haystack.errors import Neo4jFilterParserError
+from neo4j_haystack.metadata_filter import FilterParser, FilterType, Neo4jQueryConverter
 
 
 @dataclass
@@ -310,7 +306,7 @@ TEST_CASES = [
 @pytest.mark.parametrize("filters,expected_cypher,expected_params,expectation", [tc.as_param() for tc in TEST_CASES])
 def test_filter_converter(filters, expected_cypher, expected_params, expectation):
     parser = FilterParser()
-    converter = Neo4jFiltersConverter("doc")
+    converter = Neo4jQueryConverter("doc")
 
     with expectation:
         filter_ast = parser.parse(filters)
