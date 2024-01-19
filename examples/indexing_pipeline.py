@@ -56,9 +56,7 @@ p = Pipeline()
 p.add_component("text_file_converter", TextFileToDocument())
 p.add_component("cleaner", DocumentCleaner())
 p.add_component("splitter", DocumentSplitter(split_by="sentence", split_length=250, split_overlap=30))
-p.add_component(
-    "embedder", SentenceTransformersDocumentEmbedder(model_name_or_path="sentence-transformers/all-MiniLM-L6-v2")
-)
+p.add_component("embedder", SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
 p.add_component("writer", DocumentWriter(document_store=document_store))
 
 p.connect("text_file_converter.documents", "cleaner.documents")

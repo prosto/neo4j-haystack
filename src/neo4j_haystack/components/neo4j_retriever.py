@@ -32,7 +32,7 @@ class Neo4jEmbeddingRetriever:
     )
 
     pipeline = Pipeline()
-    pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model_name_or_path=model_name))
+    pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model=model_name))
     pipeline.add_component("retriever", Neo4jEmbeddingRetriever(document_store=document_store))
     pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
 

@@ -15,6 +15,9 @@
   <a href="https://img.shields.io/pypi/pyversions/neo4j-haystack.svg">
     <img alt="python version" src="https://img.shields.io/pypi/pyversions/neo4j-haystack.svg" />
   </a>
+  <a href="https://pypi.org/project/haystack-ai/">
+    <img alt="haystack version" src="https://img.shields.io/pypi/v/haystack-ai.svg?label=haystack" />
+  </a>
 </p>
 
 ----
@@ -142,8 +145,6 @@ from haystack import Document, Pipeline
 from haystack.components.embedders import SentenceTransformersTextEmbedder
 from neo4j_haystack import Neo4jEmbeddingRetriever, Neo4jDocumentStore
 
-model_name = "sentence-transformers/all-MiniLM-L6-v2"
-
 document_store = Neo4jDocumentStore(
     url="bolt://localhost:7687",
     username="neo4j",
@@ -154,7 +155,7 @@ document_store = Neo4jDocumentStore(
 )
 
 pipeline = Pipeline()
-pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model_name_or_path=model_name))
+pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
 pipeline.add_component("retriever", Neo4jEmbeddingRetriever(document_store=document_store))
 pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
 
@@ -196,7 +197,7 @@ cypher_query = """
             ORDER BY score DESC LIMIT $top_k
         """
 
-embedder = SentenceTransformersTextEmbedder(model_name_or_path="sentence-transformers/all-MiniLM-L6-v2")
+embedder = SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2")
 retriever = Neo4jDynamicDocumentRetriever(
     client_config=client_config, runtime_parameters=["query_embedding"], doc_node_name="doc"
 )

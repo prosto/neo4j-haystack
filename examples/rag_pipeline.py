@@ -44,7 +44,7 @@ Given these documents, answer the question.\nDocuments:
 rag_pipeline = Pipeline()
 rag_pipeline.add_component(
     "query_embedder",
-    SentenceTransformersTextEmbedder(model_name_or_path="sentence-transformers/all-MiniLM-L6-v2", progress_bar=False),
+    SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2", progress_bar=False),
 )
 rag_pipeline.add_component("retriever", Neo4jEmbeddingRetriever(document_store=document_store))
 rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))

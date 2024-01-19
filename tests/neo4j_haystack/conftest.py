@@ -171,7 +171,7 @@ def doc_store(doc_store_factory: Callable[..., Neo4jDocumentStore]) -> Generator
 
 @pytest.fixture(scope="session")
 def text_embedder() -> Callable[[str], List[float]]:
-    text_embedder = SentenceTransformersTextEmbedder(model_name_or_path="sentence-transformers/all-MiniLM-L6-v2")
+    text_embedder = SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2")
     text_embedder.warm_up()
 
     def _text_embedder(text: str) -> List[float]:
@@ -182,8 +182,7 @@ def text_embedder() -> Callable[[str], List[float]]:
 
 @pytest.fixture(scope="session")
 def doc_embedder() -> Callable[[List[Document]], List[Document]]:
-    model_name_or_path = "sentence-transformers/all-MiniLM-L6-v2"
-    doc_embedder = SentenceTransformersDocumentEmbedder(model_name_or_path=model_name_or_path)
+    doc_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2")
     doc_embedder.warm_up()
 
     def _doc_embedder(documents: List[Document]) -> List[Document]:
