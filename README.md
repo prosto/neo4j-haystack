@@ -78,7 +78,7 @@ The `neo4j-haystack` library uses [Python Driver](https://neo4j.com/docs/api/pyt
 In the above diagram:
 
 - `Document` is a Neo4j node (with "Document" label)
-- `properties` are Document [attributes](https://docs.haystack.deepset.ai/docs/documents_answers_labels#attributes) stored as part of the node.
+- `properties` are Document [attributes](https://docs.haystack.deepset.ai/v2.0/docs/data-classes#document) stored as part of the node.
 - `embedding` is also a property of the Document node (just shown separately in the diagram for clarity) which is a vector of type `LIST[FLOAT]`.
 - `Vector Index` is where embeddings are getting indexed by Neo4j as soon as those are updated in Document nodes.
 
