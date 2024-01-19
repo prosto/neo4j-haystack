@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.0.2](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.2) - 2024-01-19
+
+<small>[Compare with v2.0.1](https://github.com/prosto/neo4j-haystack/compare/v2.0.1...v2.0.2)</small>
+
+### Bug Fixes
+
+- Change imports for DuplicateDocumentError and DuplicatePolicy as per latest changes in haystack ([7a1f053](https://github.com/prosto/neo4j-haystack/commit/7a1f0535b143ef3b4a3e558174e369630079a824) by Sergey Bondarenco).
+- Rename 'model_name_or_path' to 'model' as per latest changes in haystack ([0131059](https://github.com/prosto/neo4j-haystack/commit/0131059df8f9966568fea8716d3ba1910801542c) by Sergey Bondarenco).
+
 ## [v2.0.1](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.1) - 2024-01-15
 
 <small>[Compare with v2.0.0](https://github.com/prosto/neo4j-haystack/compare/v2.0.0...v2.0.1)</small>
