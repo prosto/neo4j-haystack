@@ -1,6 +1,6 @@
 from typing import Optional
 
-from haystack.document_stores import DocumentStoreError
+from haystack.document_stores.errors import DocumentStoreError
 
 
 class Neo4jDocumentStoreError(DocumentStoreError):

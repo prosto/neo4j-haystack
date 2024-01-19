@@ -3,7 +3,8 @@ from typing import Any, ClassVar, Dict, Generator, List, Literal, Optional, Set
 
 import numpy as np
 from haystack import Document, default_from_dict, default_to_dict
-from haystack.document_stores import DuplicateDocumentError, DuplicatePolicy
+from haystack.document_stores.errors import DuplicateDocumentError
+from haystack.document_stores.types import DuplicatePolicy
 from neo4j.exceptions import DatabaseError
 from tqdm import tqdm
 

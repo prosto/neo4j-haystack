@@ -3,7 +3,8 @@ from unittest import mock
 
 import pytest
 from haystack import Document
-from haystack.document_stores import DuplicateDocumentError, DuplicatePolicy
+from haystack.document_stores.errors import DuplicateDocumentError
+from haystack.document_stores.types import DuplicatePolicy
 
 from neo4j_haystack.client import Neo4jClient, Neo4jClientConfig
 from neo4j_haystack.document_stores.neo4j_store import Neo4jDocumentStore
