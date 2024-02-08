@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.0.3](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.3) - 2024-02-08
+
+<small>[Compare with v2.0.2](https://github.com/prosto/neo4j-haystack/compare/v2.0.2...v2.0.3)</small>
+
+### Build
+
+- Update settings as per latest ruff requirements in pyproject.toml ([652d1f1](https://github.com/prosto/neo4j-haystack/commit/652d1f1ac6666d508edde825ed78c93d87ed6c4b) by Sergey Bondarenco).
+
+### Features
+
+- Introducing  `execute_write` method in Neo4jClient to run arbitrary Cypher queries which modify data ([88e89bb](https://github.com/prosto/neo4j-haystack/commit/88e89bbe405a72e9185cf56de18aaabcebe71219) by Sergey Bondarenco).
+
+### Bug Fixes
+
+- Return number of written documents from `write_documents` as per Protocol for document stores ([f421ed5](https://github.com/prosto/neo4j-haystack/commit/f421ed54c671c14cabc0fb1a00d5b68c156dda6c) by Sergey Bondarenco).
+
+### Code Refactoring
+
+- Read token values using Secret util ([f75fa32](https://github.com/prosto/neo4j-haystack/commit/f75fa3258a6a53a610c7b7356a891a6ee63f2f08) by Sergey Bondarenco).
+
 ## [v2.0.2](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.2) - 2024-01-19
 
 <small>[Compare with v2.0.1](https://github.com/prosto/neo4j-haystack/compare/v2.0.1...v2.0.2)</small>
