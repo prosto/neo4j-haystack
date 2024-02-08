@@ -192,6 +192,7 @@ def test_document_store_to_dict(verify_connectivity_mock, to_dict_mock):
         create_index_if_missing=False,
         recreate_index=False,
         write_batch_size=111,
+        verify_connectivity=True,
     )
     data = doc_store.to_dict()
 
@@ -207,6 +208,7 @@ def test_document_store_to_dict(verify_connectivity_mock, to_dict_mock):
             "create_index_if_missing": False,
             "recreate_index": False,
             "write_batch_size": 111,
+            "verify_connectivity": True,
             "client_config": {"mock": "mock"},
         },
     }
@@ -238,7 +240,6 @@ def test_document_store_from_dict(verify_connectivity_mock, from_dict_mock):
     doc_store = Neo4jDocumentStore.from_dict(data)
 
     assert doc_store.client_config == expected_client_config
-    assert doc_store.url == "bolt://localhost:7687"
     assert doc_store.index == "document-embeddings"
     assert doc_store.node_label == "Document"
     assert doc_store.embedding_dim == 384

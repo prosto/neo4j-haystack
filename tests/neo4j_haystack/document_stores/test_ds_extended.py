@@ -5,7 +5,34 @@ import numpy as np
 import pytest
 from haystack import Document
 
+from neo4j_haystack.client.neo4j_client import Neo4jClientConfig
 from neo4j_haystack.document_stores.neo4j_store import Neo4jDocumentStore
+
+
+@pytest.mark.unit
+def test_document_store_connection_parameters():
+    skip_db_interactions_for_test = {
+        "create_index_if_missing": False,
+        "verify_connectivity": False,
+        "recreate_index": False,
+    }
+
+    connection_config = {
+        "url": "bolt://db:7687",
+        "username": "username",
+        "password": "password",
+        "database": "database",
+    }
+
+    doc_store = Neo4jDocumentStore(**connection_config, **skip_db_interactions_for_test)
+
+    assert doc_store.client_config.url == "bolt://db:7687"
+    assert doc_store.client_config.database == "database"
+
+    client_config = Neo4jClientConfig(**connection_config)
+    doc_store = Neo4jDocumentStore(client_config=client_config, **skip_db_interactions_for_test)
+
+    assert doc_store.client_config == client_config
 
 
 @pytest.mark.integration
