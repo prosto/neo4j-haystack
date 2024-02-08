@@ -612,7 +612,7 @@ class Neo4jClient:
         self,
         query: str,
         parameters: Optional[Dict[str, Any]] = None,
-    ) -> tuple[ResultSummary, List[Dict[str, Any]]]:
+    ) -> Tuple[ResultSummary, List[Dict[str, Any]]]:
         """
         Runs an arbitrary write Cypher query with parameters.
 
