@@ -100,7 +100,35 @@ pip install neo4j-haystack
 
 ## Usage
 
-Once installed, you can start using `Neo4jDocumentStore` as any other document stores that support embeddings.
+### Running Neo4j
+
+You will need to have a running instance of Neo4j database to use components from the package (in-memory version of Neo4j is not supported).
+There are several options available:
+
+- [Docker](https://neo4j.com/docs/operations-manual/5/docker/), other options available in the same Operations Manual
+- [AuraDB](https://neo4j.com/cloud/platform/aura-graph-database/) - a fully managed Cloud Instance of Neo4j
+- [Neo4j Desktop](https://neo4j.com/docs/desktop-manual/current/) client application
+
+The simplest way to start database locally will be with Docker container:
+
+```bash
+docker run \
+    --restart always \
+    --publish=7474:7474 --publish=7687:7687 \
+    --env NEO4J_AUTH=neo4j/passw0rd \
+    neo4j:5.15.0
+```
+
+As of Neo4j `5.13`, the vector search index is no longer a beta feature, consider using a version of the database `">= 5.13"`. In the example above version `5.15.0` is being used to start a container. You could explore Known issues and Limitations in the [documentation](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/).
+
+The `NEO4J_AUTH` environment variable sets default credentials (`username/password`) for authentication.
+
+> **Note**
+> Assuming you have a docker container running navigate to <http://localhost:7474> to open [Neo4j Browser](https://neo4j.com/docs/browser-manual/current/) to explore graph data and run Cypher queries.
+
+### Document Store
+
+Once you have the package installed and the database running, you can start using `Neo4jDocumentStore` as any other document stores that support embeddings.
 
 ```python
 from neo4j_haystack import Neo4jDocumentStore
@@ -193,7 +221,7 @@ The above code converts a Document to a dictionary and will render the following
 
 The data from the dictionary will be used to create a node in Neo4j after you write the document with `document_store.write_documents([document])`. You could query it with Cypher, e.g. `MATCH (doc:Document) RETURN doc`. Below is a json representation of the node in Neo4j:
 
-```json
+```js
 {
   "identity": 0,
   "labels": [
@@ -214,31 +242,6 @@ The data from the dictionary will be used to create a node in Neo4j after you wr
 
 The full list of parameters accepted by `Neo4jDocumentStore` can be found in
 [API documentation](https://prosto.github.io/neo4j-haystack/reference/neo4j_store/#neo4j_haystack.document_stores.neo4j_store.Neo4jDocumentStore.__init__).
-
-### Running Neo4j
-
-You will need to have a running instance of Neo4j database to use components from the package (in-memory version of Neo4j is not supported). There are several options available:
-
-- [Docker](https://neo4j.com/docs/operations-manual/5/docker/), other options available in the same Operations Manual
-- [AuraDB](https://neo4j.com/cloud/platform/aura-graph-database/) - a fully managed Cloud Instance of Neo4j
-- [Neo4j Desktop](https://neo4j.com/docs/desktop-manual/current/) client application
-
-The simplest way to start database locally will be with Docker container:
-
-```bash
-docker run \
-    --restart always \
-    --publish=7474:7474 --publish=7687:7687 \
-    --env NEO4J_AUTH=neo4j/passw0rd \
-    neo4j:5.15.0
-```
-
-As of Neo4j `5.13`, the vector search index is no longer a beta feature, consider using a version of the database `">= 5.13"`. In the example above version `5.15.0` is being used to start a container. You could explore Known issues and Limitations in the [documentation](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/).
-
-The `NEO4J_AUTH` environment variable sets default credentials (`username/password`) for authentication.
-
-> **Note**
-> Assuming you have a docker container running navigate to <http://localhost:7474> to open [Neo4j Browser](https://neo4j.com/docs/browser-manual/current/) to explore graph data and run Cypher queries.
 
 ### Indexing documents
 
