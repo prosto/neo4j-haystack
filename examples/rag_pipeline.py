@@ -1,15 +1,14 @@
-import os
-
 from haystack import GeneratedAnswer, Pipeline
 from haystack.components.builders.answer_builder import AnswerBuilder
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.embedders import SentenceTransformersTextEmbedder
 from haystack.components.generators import HuggingFaceTGIGenerator
+from haystack.utils import Secret
 
 from neo4j_haystack import Neo4jDocumentStore, Neo4jEmbeddingRetriever
 
 # Load HF Token from environment variables.
-HF_TOKEN = os.environ.get("HF_TOKEN")
+HF_TOKEN = Secret.from_env_var("HF_API_TOKEN")
 
 # Make sure you have a running Neo4j database with indexed documents available (see `indexing_pipeline.py`),
 # e.g. with Docker:
