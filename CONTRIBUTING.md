@@ -40,6 +40,14 @@ Update configuration with the following:
 virtual = ".venv"
 ```
 
+It is suggested to develop locally with minimal supported python version (see `requires-python` in `pyproject.toml`).
+To make sure hatch is creating environments with python version you need set `HATCH_PYTHON` as follows:
+
+```bash
+export HATCH_PYTHON=~/.pyenv/versions/3.8.16/bin/python # You might have a different version  
+hatch run python --version # Checks python version by creating default hatch environment
+```
+
 If you run `hatch env create dev` you should see `.venv/dev` directory created with dependencies you need for development.
 You could point your IDE to this particular python environment/interpreter.
 
