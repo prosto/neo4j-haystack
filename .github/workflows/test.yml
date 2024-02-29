@@ -1,0 +1,52 @@
+name: test
+
+on:
+  workflow_dispatch:
+    inputs:
+      PYTHON_VERSION:
+        description: "List of python versions"
+        required: true
+        default: '["3.8.x", "3.9.x", "3.10.x"]'
+      OS_NAME:
+        description: "List of OS for test execution"
+        required: true
+        default: '["ubuntu-20.04"]'
+      NEO4J_VERSION:
+        description: "List of Neo4j docker images"
+        required: true
+        default: '["neo4j:5.13.0", "neo4j:5.14.0", "neo4j:5.15.0", "neo4j:5.16.0", "neo4j:5.17.0"]'
+
+concurrency:
+  group: test-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: ${{ fromJSON(github.event.inputs.PYTHON_VERSION) }}
+        os: ${{ fromJSON(github.event.inputs.OS_NAME) }}
+        neo4j-version: ${{ fromJSON(github.event.inputs.NEO4J_VERSION) }}
+
+    runs-on: ${{ matrix.os }}
+
+    name: Python ${{ matrix.python-version }} test on Neo4j:${{ matrix.python-version }} OS:${{ matrix.os }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Hatch
+        run: pip install --upgrade hatch
+
+      - name: Run tests
+        env:
+          NEO4J_VERSION: ${{ matrix.neo4j-version }}
+        run: |
+          hatch run test

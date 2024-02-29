@@ -72,6 +72,9 @@ test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage html"]
 cov = ["test-cov", "cov-report"]
 
+[tool.hatch.envs.default.env-vars]
+NEO4J_VERSION = "neo4j:5.13.0"
+
 [tool.hatch.envs.dev]
 features = ["all"]
 description = """
