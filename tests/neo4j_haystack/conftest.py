@@ -98,6 +98,7 @@ def neo4j_database():
     container instance fof the whole duration of tests execution to speedup the process.
     """
     neo4j_port = _get_free_tcp_port()
+    neo4j_version = os.environ.get("NEO4J_VERSION", "neo4j:5.13.0")
 
     config = Neo4jClientConfig(
         f"bolt://localhost:{neo4j_port}", database="neo4j", username="neo4j", password="passw0rd"
@@ -105,7 +106,7 @@ def neo4j_database():
 
     client = docker.from_env()
     container = client.containers.run(
-        image="neo4j:5.13.0",
+        image=neo4j_version,
         auto_remove=True,
         environment={
             "NEO4J_AUTH": f"{config.username}/{config.password}",
