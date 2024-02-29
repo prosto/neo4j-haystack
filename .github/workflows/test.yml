@@ -30,7 +30,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    name: Python ${{ matrix.python-version }} test on Neo4j:${{ matrix.python-version }} OS:${{ matrix.os }}
+    name: Python ${{ matrix.python-version }} test on Neo4j:${{ matrix.neo4j-version }} OS:${{ matrix.os }}
 
     steps:
       - name: Check out repository

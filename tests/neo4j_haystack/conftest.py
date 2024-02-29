@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import socket
 import time
@@ -19,6 +20,8 @@ from neo4j_haystack.document_stores import Neo4jDocumentStore
 
 NEO4J_PORT = 7689
 EMBEDDING_DIM = 768
+
+logger = logging.getLogger("conftest")
 
 
 @pytest.fixture
@@ -99,6 +102,7 @@ def neo4j_database():
     """
     neo4j_port = _get_free_tcp_port()
     neo4j_version = os.environ.get("NEO4J_VERSION", "neo4j:5.13.0")
+    neo4j_container = f"test_neo4j_haystack-{neo4j_port}"
 
     config = Neo4jClientConfig(
         f"bolt://localhost:{neo4j_port}", database="neo4j", username="neo4j", password="passw0rd"
@@ -111,7 +115,7 @@ def neo4j_database():
         environment={
             "NEO4J_AUTH": f"{config.username}/{config.password}",
         },
-        name=f"test_neo4j_haystack-{neo4j_port}",
+        name=neo4j_container,
         ports={"7687/tcp": ("127.0.0.1", neo4j_port)},
         detach=True,
         remove=True,
@@ -122,7 +126,11 @@ def neo4j_database():
     if not _connection_established(db_driver):
         pytest.exit("Could not startup neo4j docker container and establish connection with database")
 
+    logger.info(f"Started neo4j docker container: {neo4j_container}, image: {neo4j_version}, port: {neo4j_port}")
+
     yield config
+
+    logger.info(f"Stopping neo4j docker container: {neo4j_container}")
 
     db_driver.close()
     container.stop()

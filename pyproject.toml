@@ -98,6 +98,9 @@ markers = [
   "integration: integration tests",
   "neo4j: requires Neo4j container",
 ]
+log_cli = true
+log_cli_level = "INFO"
+
 
 [tool.hatch.envs.docs]
 template = "docs"
