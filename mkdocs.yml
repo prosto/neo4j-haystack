@@ -17,10 +17,13 @@ nav:
   - Code Reference:
     - Neo4jDocumentStore: reference/neo4j_store.md
     - Neo4jRetriever: reference/neo4j_retriever.md
+    - Neo4jQueryWriter: reference/neo4j_query_writer.md
     - Neo4jClient: reference/neo4j_client.md
     - MetadataFilter:
       - FilterParser: reference/metadata_filter/parser.md
       - Neo4jQueryConverter: reference/metadata_filter/neo4j_query_converter.md
+    - Components:
+      - Utils: reference/components/utils.md
     - errors: reference/errors.md
   - Haystack Documentation: https://docs.haystack.deepset.ai/v2.0/docs/intro
 
