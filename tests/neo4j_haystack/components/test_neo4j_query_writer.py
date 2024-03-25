@@ -191,6 +191,34 @@ def test_pipeline_execution(client_config: Neo4jClientConfig, neo4j_client: Neo4
     assert doc_in_neo4j == {"id": doc_id, "content": "Hello? Is it transformer?", "year_start": 2017, "year_end": 2024}
 
 
+@pytest.mark.integration
+def test_query_writer_raises_on_failure(client_config: Neo4jClientConfig):
+    writer = Neo4jQueryWriter(
+        client_config=client_config,
+        verify_connectivity=False,
+        raise_on_failure=True,
+    )
+
+    invalid_query = "CREATE (n:Universe {id=`42`})"  # should be ":" instead of "="
+
+    with pytest.raises(Exception):  # noqa: B017
+        writer.run(invalid_query)
+
+
+@pytest.mark.integration
+def test_query_writer_return_on_failure(client_config: Neo4jClientConfig):
+    writer = Neo4jQueryWriter(
+        client_config=client_config,
+        verify_connectivity=False,
+        raise_on_failure=False,
+    )
+
+    invalid_query = "CREATE (n:Universe {id=`42`})"  # should be ":" instead of "="
+    result = writer.run(invalid_query)
+
+    assert result == {"query_type": "w", "query_status": "error"}
+
+
 @pytest.mark.unit
 @mock.patch("neo4j_haystack.components.neo4j_query_writer.Neo4jClientConfig", spec=Neo4jClientConfig)
 @mock.patch("neo4j_haystack.components.neo4j_query_writer.Neo4jClient", spec=Neo4jClient)
@@ -199,9 +227,7 @@ def test_neo4j_query_writer_to_dict(neo4j_client_mock, client_config_mock):
     client_config_mock.configure_mock(**{"to_dict.return_value": {"mock": "mock"}})
 
     retriever = Neo4jQueryWriter(
-        client_config=client_config_mock,
-        runtime_parameters=["year"],
-        verify_connectivity=True,
+        client_config=client_config_mock, runtime_parameters=["year"], verify_connectivity=True, raise_on_failure=False
     )
 
     data = retriever.to_dict()
@@ -211,6 +237,7 @@ def test_neo4j_query_writer_to_dict(neo4j_client_mock, client_config_mock):
         "init_parameters": {
             "runtime_parameters": ["year"],
             "verify_connectivity": True,
+            "raise_on_failure": False,
             "client_config": {"mock": "mock"},
         },
     }
@@ -230,6 +257,7 @@ def test_neo4j_query_writer_from_dict(neo4j_client_mock, from_dict_mock):
         "init_parameters": {
             "runtime_parameters": ["year"],
             "verify_connectivity": True,
+            "raise_on_failure": False,
             "client_config": {"mock": "mock"},
         },
     }
@@ -239,5 +267,6 @@ def test_neo4j_query_writer_from_dict(neo4j_client_mock, from_dict_mock):
     assert retriever._client_config == expected_client_config
     assert retriever._runtime_parameters == ["year"]
     assert retriever._verify_connectivity is True
+    assert retriever._raise_on_failure is False
 
     neo4j_client.verify_connectivity.assert_called_once()

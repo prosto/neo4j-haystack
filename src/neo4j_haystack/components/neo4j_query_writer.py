@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Optional
+import logging
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 from haystack import component, default_from_dict, default_to_dict
+from neo4j import ResultSummary
 
 from neo4j_haystack.client import Neo4jClient, Neo4jClientConfig
 from neo4j_haystack.components.utils import (
@@ -8,6 +10,13 @@ from neo4j_haystack.components.utils import (
     DocumentParameterMarshaller,
     Neo4jQueryParameterMarshaller,
 )
+
+logger = logging.getLogger(__name__)
+
+
+class QueryResult(TypedDict):
+    query_type: Optional[str]
+    query_status: Literal["success", "error"]
 
 
 @component
@@ -60,7 +69,7 @@ class Neo4jQueryWriter:
     Output:
         `>>> {'result_available_after': 4, 'result_consumed_after': 0, 'query_type': 'w'}`
 
-    The above example show the flexibility of the `Neo4jQueryWriter` component:
+    The above example shows the flexibility of the `Neo4jQueryWriter` component:
 
     - Cypher query can practically write any data to Neo4j depending on your use case
     - Parameters can be provided at the component creation time, see `parameters`
@@ -83,6 +92,7 @@ class Neo4jQueryWriter:
         client_config: Neo4jClientConfig,
         runtime_parameters: Optional[List[str]] = None,
         verify_connectivity: Optional[bool] = False,
+        raise_on_failure: bool = True,
     ):
         """
         Create a Neo4jDocumentWriter component.
@@ -91,10 +101,12 @@ class Neo4jQueryWriter:
             client_config: Neo4j client configuration to connect to database (e.g. credentials and connection settings).
             runtime_parameters: list of input parameters/slots for connecting components in a pipeline.
             verify_connectivity: If `True` will verify connectivity with Neo4j database configured by `client_config`.
+            raise_on_failure: If `True` raises an exception if it fails to execute given Cypher query.
         """
         self._client_config = client_config
         self._runtime_parameters = runtime_parameters or []
         self._verify_connectivity = verify_connectivity
+        self._raise_on_failure = raise_on_failure
 
         self._neo4j_client = Neo4jClient(client_config)
         self._marshallers: List[Neo4jQueryParameterMarshaller] = [
@@ -108,9 +120,7 @@ class Neo4jQueryWriter:
         component.set_input_types(self, **run_input_slots, **kwargs_input_slots)
 
         # setup outputs
-        component.set_output_types(
-            self, result_available_after=Optional[int], result_consumed_after=Optional[int], query_type=str
-        )
+        component.set_output_types(self, query_type=Optional[str], query_status=str)
 
         if verify_connectivity:
             self._neo4j_client.verify_connectivity()
@@ -123,6 +133,7 @@ class Neo4jQueryWriter:
             self,
             runtime_parameters=self._runtime_parameters,
             verify_connectivity=self._verify_connectivity,
+            raise_on_failure=self._raise_on_failure,
         )
 
         data["init_parameters"]["client_config"] = self._client_config.to_dict()
@@ -138,7 +149,7 @@ class Neo4jQueryWriter:
         data["init_parameters"]["client_config"] = client_config
         return default_from_dict(cls, data)
 
-    def run(self, query: str, parameters: Optional[Dict[str, Any]] = None, **kwargs):
+    def run(self, query: str, parameters: Optional[Dict[str, Any]] = None, **kwargs) -> QueryResult:
         """
         Runs the arbitrary Cypher `query` with `parameters` to write data to Neo4j.
 
@@ -166,15 +177,17 @@ class Neo4jQueryWriter:
         parameters = parameters or {}
         parameters_combined = {**kwargs, **parameters}
 
-        result_summary, _ = self._neo4j_client.execute_write(
-            query, parameters=self._serialize_parameters(parameters_combined)
-        )
+        try:
+            result_summary, _ = self._neo4j_client.execute_write(
+                query, parameters=self._serialize_parameters(parameters_combined)
+            )
 
-        return {
-            "result_available_after": result_summary.result_available_after,
-            "result_consumed_after": result_summary.result_consumed_after,
-            "query_type": result_summary.query_type,
-        }
+            return self._query_result(result_summary)
+        except Exception as ex:
+            if self._raise_on_failure:
+                raise ex
+            logger.error("Couldn't execute Neo4j write query %s", ex)
+            return self._query_result()
 
     def _serialize_parameters(self, parameters: Any) -> Any:
         """
@@ -200,3 +213,15 @@ class Neo4jQueryWriter:
         # Find a marshaller which supports given type of parameter otherwise return parameter as is
         marshaller = next((m for m in self._marshallers if m.supports(parameters)), None)
         return marshaller.marshal(parameters) if marshaller else parameters
+
+    def _query_result(self, result_summary: Optional[ResultSummary] = None) -> QueryResult:
+        if result_summary:
+            return {
+                "query_type": result_summary.query_type,
+                "query_status": "success",
+            }
+        else:
+            return {
+                "query_type": "w",
+                "query_status": "error",
+            }
