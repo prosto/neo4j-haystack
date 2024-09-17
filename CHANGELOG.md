@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.1.0](https://github.com/prosto/neo4j-haystack/releases/tag/v2.1.0) - 2024-09-17
+
+<small>[Compare with v2.0.3](https://github.com/prosto/neo4j-haystack/compare/v2.0.3...v2.1.0)</small>
+
+### Dependencies
+
+- Update versions of dependencies ([b422aca](https://github.com/prosto/neo4j-haystack/commit/b422aca73c2a449213c1d87128418d0d77d37cb5) by Sergey Bondarenco).
+
+### Features
+
+- Allow Cypher query to be provided during creation of Neo4jDynamicDocumentRetriever component ([ddfbd2e](https://github.com/prosto/neo4j-haystack/commit/ddfbd2e277999d05c7f580c1cb61e0341b91783d) by Sergey Bondarenco).
+- Allow a custom marshaller for converting Document to Neo4j record ([9ca023e](https://github.com/prosto/neo4j-haystack/commit/9ca023e059bfd6535eb0666e8c7518453f49ec46) by Sergey Bondarenco).
+- Neo4jQueryReader component to run arbitrary Cypher queries to extract data from Neo4j ([bc23597](https://github.com/prosto/neo4j-haystack/commit/bc23597b66342e447a90fb12e9c8874894c9ccf0) by Sergey Bondarenco).
+- A module responsible of serialization of complex types in Cypher query parameters ([99ff860](https://github.com/prosto/neo4j-haystack/commit/99ff86009f20adecab1bd38351632b47bf52a031) by Sergey Bondarenco).
+- Example RAG pipeline for Parent-Child document setup ([525d166](https://github.com/prosto/neo4j-haystack/commit/525d1665ad43383d1abdea6d3395505f72d21153) by Sergey Bondarenco).
+- Add raise_on_failure setting for Neo4jQueryWriter component for better error handling control ([51c819c](https://github.com/prosto/neo4j-haystack/commit/51c819c347d9633d59c404f63c04f5bdec74241e) by Sergey Bondarenco).
+- Neo4jQueryWriter component to run Cypher queries which write data to Neo4j ([ceb569a](https://github.com/prosto/neo4j-haystack/commit/ceb569aded92e5657a054fa4fa0fa975ac9fa571) by Sergey Bondarenco).
+
+### Bug Fixes
+
+- Use HuggingFaceAPIGenerator in example scripts as HuggingFaceTGIGenerator is no longer available ([42ed60d](https://github.com/prosto/neo4j-haystack/commit/42ed60d3b873cb7306a4d0be9b5de682c533d8a0) by Sergey Bondarenco).
+
+### Code Refactoring
+
+- Adjust component outputs and parameter serialization for Neo4jQueryWriter ([0d93b21](https://github.com/prosto/neo4j-haystack/commit/0d93b2102c6b677739cb878316c711ddd4a890d2) by Sergey Bondarenco).
+
 ## [v2.0.3](https://github.com/prosto/neo4j-haystack/releases/tag/v2.0.3) - 2024-02-08
 
 <small>[Compare with v2.0.2](https://github.com/prosto/neo4j-haystack/compare/v2.0.2...v2.0.3)</small>
