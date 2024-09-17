@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def fetch_archive_from_http(url: str, output_dir: str):
     if Path(output_dir).is_dir():
-        logger.warn(f"'{output_dir}' directory already exists. Skipping data download")
+        logger.warning(f"'{output_dir}' directory already exists. Skipping data download")
         return
 
     with requests.get(url, timeout=10, stream=True) as response:

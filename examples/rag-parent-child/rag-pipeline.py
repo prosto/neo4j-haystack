@@ -2,7 +2,7 @@ from haystack import GeneratedAnswer, Pipeline
 from haystack.components.builders.answer_builder import AnswerBuilder
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.embedders import SentenceTransformersTextEmbedder
-from haystack.components.generators import HuggingFaceTGIGenerator
+from haystack.components.generators import HuggingFaceAPIGenerator
 from haystack.utils.auth import Secret
 
 from neo4j_haystack import Neo4jClientConfig, Neo4jDynamicDocumentRetriever
@@ -56,10 +56,11 @@ rag_pipeline.add_component(
 rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
 rag_pipeline.add_component(
     "llm",
-    HuggingFaceTGIGenerator(
-        model="mistralai/Mistral-7B-Instruct-v0.2",
-        token=HF_TOKEN,
+    HuggingFaceAPIGenerator(
+        api_type="serverless_inference_api",
+        api_params={"model": "mistralai/Mistral-7B-Instruct-v0.3"},
         generation_kwargs={"max_new_tokens": 120, "stop_sequences": ["."]},
+        token=HF_TOKEN,
     ),
 )
 rag_pipeline.add_component("answer_builder", AnswerBuilder())

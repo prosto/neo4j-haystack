@@ -51,14 +51,14 @@ cypher_query_create_documents = """
     // Creating Parent documents
     UNWIND $parent_documents AS parent_doc
     MERGE (parent:`Document` {id: parent_doc.id})
-    SET parent += parent_doc{.*, embedding: null}
+    SET parent += parent_doc{.*, embedding: null, _split_overlap: null} // _split_overlap is a dictionary and is skipped
 
     // Creating Child documents for a given 'parent' document
     WITH parent
     UNWIND $child_documents AS child_doc
     WITH parent, child_doc WHERE child_doc.source_id = parent.id
     MERGE (child:`Chunk` {id: child_doc.id})-[:HAS_PARENT]->(parent)
-    SET child += child_doc{.*, embedding: null}
+    SET child += child_doc{.*, embedding: null, _split_overlap: null} // _split_overlap is a dictionary and is skipped
     WITH child, child_doc
     CALL { WITH child, child_doc
         MATCH(child:`Chunk` {id: child_doc.id}) WHERE child_doc.embedding IS NOT NULL
