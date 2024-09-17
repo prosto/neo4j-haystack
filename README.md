@@ -20,7 +20,7 @@
   </a>
 </p>
 
-----
+---
 
 **Table of Contents**
 
@@ -45,6 +45,10 @@ In addition to the `Neo4jDocumentStore` the library includes the following hayst
 
 - [Neo4jEmbeddingRetriever](https://prosto.github.io/neo4j-haystack/reference/neo4j_retriever/#neo4j_haystack.components.neo4j_retriever.Neo4jEmbeddingRetriever) - is a typical [retriever component](https://docs.haystack.deepset.ai/v2.0/docs/retrievers) which can be used to query vector store index and find related Documents. The component uses `Neo4jDocumentStore` to query embeddings.
 - [Neo4jDynamicDocumentRetriever](https://prosto.github.io/neo4j-haystack/reference/neo4j_retriever/#neo4j_haystack.components.neo4j_retriever.Neo4jDynamicDocumentRetriever) is also a retriever component in a sense that it can be used to query Documents in Neo4j. However it is decoupled from `Neo4jDocumentStore` and allows to run arbitrary [Cypher query](https://neo4j.com/docs/cypher-manual/current/queries/) to extract documents. Practically it is possible to query Neo4j same way `Neo4jDocumentStore` does, including vector search.
+- [Neo4jQueryReader](https://prosto.github.io/neo4j-haystack/reference/neo4j_query_reader/#neo4j_haystack.components.neo4j_query_reader.Neo4jQueryReader) - is a component which gives flexible way to read data from Neo4j by running custom Cypher query along with query parameters. You could use such queries to read data from Neo4j to enhance your RAG pipelines. For example prompting LLM to produce Cypher query based on given context (Text to Cypher) and use `Neo4jQueryReader` to run the
+  query and extract results. [OutputAdapter](https://docs.haystack.deepset.ai/docs/outputadapter) component might
+  become handy in such scenarios - it can be used to handle outputs from `Neo4jQueryReader`.
+- [Neo4jQueryWriter](https://prosto.github.io/neo4j-haystack/reference/neo4j_query_writer/#neo4j_haystack.components.neo4j_query_writer.Neo4jQueryWriter) - this component gives flexible way to write data to Neo4j by running arbitrary Cypher query along with parameters. Query parameters can be pipeline inputs or outputs from connected components. You could use such queries to write Documents with additional graph nodes for a more complex RAG scenarios. The difference between [DocumentWriter](https://docs.haystack.deepset.ai/docs/documentwriter) and `Neo4jQueryWriter` is that the latter can write any data to Neo4j, not just Documents.
 
 The `neo4j-haystack` library uses [Python Driver](https://neo4j.com/docs/api/python-driver/current/api.html#api-documentation) and
 [Cypher Queries](https://neo4j.com/docs/cypher-manual/current/introduction/) to interact with Neo4j database and hide all complexities under the hood.
@@ -176,7 +180,7 @@ If you intend to obtain embeddings before writing documents use the following co
 from haystack import Document
 
 # import one of the available document embedders
-from haystack.components.embedders import SentenceTransformersDocumentEmbedder 
+from haystack.components.embedders import SentenceTransformersDocumentEmbedder
 
 documents = [Document(content="My name is Morgan and I live in Paris.")]
 
@@ -350,6 +354,10 @@ documents: List[Document] = result["retriever"]["documents"]
 
 In certain scenarios you might have an existing graph in Neo4j database which was created by custom scripts or data ingestion pipelines. The schema of the graph could be complex and not exactly fitting into Haystack Document model. Moreover in many situations you might want to leverage existing graph data to extract more context for grounding LLMs. To make it possible with Haystack we have `Neo4jDynamicDocumentRetriever` component - a flexible retriever which can run arbitrary Cypher query to obtain documents. This component does not require Document Store to operate.
 
+> **Note**
+> The logic of `Neo4jDynamicDocumentRetriever` could be easily achieved with `Neo4jQueryReader` + `OutputAdapter` components.
+> `Neo4jDynamicDocumentRetriever` makes sense when you specifically expect Documents as an output of a query execution and would like to avoid additional output conversions in your pipeline (e.g. "Neo4j Record" --> Document).
+
 The above example of `Neo4jEmbeddingRetriever` could be rewritten without usage of `Neo4jDocumentStore` in the retrieval pipeline:
 
 ```python
@@ -424,11 +432,11 @@ documents: List[Document] = result["retriever"]["documents"]
 Please notice how query parameters are being used in the `cypher_query`:
 
 - `runtime_parameters` is a list of parameter names which are going to be input slots when connecting components
-    in a pipeline. In our case `query_embedding` input is connected to the `text_embedder.embedding` output.
+  in a pipeline. In our case `query_embedding` input is connected to the `text_embedder.embedding` output.
 - `pipeline.run` specifies additional parameters to the `retriever` component which can be referenced in the
-    `cypher_query`, e.g. `top_k` and `num_of_years`.
+  `cypher_query`, e.g. `top_k` and `num_of_years`.
 
-In some way `Neo4jDynamicDocumentRetriever` resembles the [DynamicPromptBuilder](https://docs.haystack.deepset.ai/v2.0/docs/dynamicpromptbuilder) component, only instead of prompt it constructs a Cypher query using [parameters](https://neo4j.com/docs/python-manual/current/query-simple/#query-parameters). In the example above documents retrieved by running the query, the `RETURN doc{.*, score}` part returns back found documents with scores. Which node variable is going to be used to construct haystack Document is specified in the `doc_node_name` parameter (see above `doc_node_name="doc"`).
+In some way `Neo4jDynamicDocumentRetriever` resembles the [PromptBuilder](https://docs.haystack.deepset.ai/v2.0/docs/promptbuilder) component, only instead of prompt it constructs a Cypher query using [parameters](https://neo4j.com/docs/python-manual/current/query-simple/#query-parameters). In the example above documents retrieved by running the query, the `RETURN doc{.*, score}` part returns back found documents with scores. Which node variable is going to be used to construct haystack Document is specified in the `doc_node_name` parameter (see above `doc_node_name="doc"`).
 
 You have options to enhance your RAG pipeline with data having various schemas, for example by first finding nodes using vector search and then expanding query to search for nearby nodes using appropriate Cypher syntax. It is possible to implement "Parent-Child" chunking strategy with such approach. Before that you have to ingest/index data into Neo4j accordingly by building an indexing pipeline or a custom ingestion script. A simple schema is shown below:
 
