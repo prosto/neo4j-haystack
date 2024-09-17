@@ -28,22 +28,22 @@ dependencies = ["haystack-ai", "neo4j>=5.8.1"]
 [project.optional-dependencies]
 docker = ["docker"]
 tests = [
-  "coverage[toml]>=6.5",
+  "coverage[toml]>=7.6.1",
   "pytest",
   "neo4j-haystack[docker]",
-  "sentence-transformers>=2.2.0",
+  "sentence-transformers>=3.1.0",
 ]
 docs = [
-  "mkdocs>=1.3",
+  "mkdocs>=1.6.1",
   "mkdocstrings[python]",
-  "mkdocs-material>=7.3",
-  "mkdocs-coverage>=0.2",
-  "mkdocs-section-index>=0.3",
-  "black>=23.1.0",
+  "mkdocs-material>=9.5.34",
+  "mkdocs-coverage>=1.1.0",
+  "mkdocs-section-index>=0.3.9",
+  "black>=24.8.0",
 ]
-maintain = ["git-changelog>=2.3"]
-quality = ["black>=23.1.0", "ruff>=0.0.166"]
-typing = ["mypy>=1.7"]
+maintain = ["git-changelog>=2.5.2"]
+quality = ["black>=24.8.0", "ruff>=0.6.5"]
+typing = ["mypy>=1.11.2"]
 examples = ["datasets"]
 all = ["neo4j-haystack[docker,tests,docs,maintain,quality,typing,examples]"]
 
@@ -135,7 +135,7 @@ features = ["quality", "typing"]
 
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/neo4j_haystack tests examples scripts}"
-style = ["ruff {args:.}", "black --check --diff {args:.}"]
+style = ["ruff check {args:.}", "black --check --diff {args:.}"]
 fmt = ["black {args:.}", "ruff --fix {args:.}", "style"]
 all = ["style", "typing"]
 
