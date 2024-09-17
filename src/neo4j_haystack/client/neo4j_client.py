@@ -637,6 +637,35 @@ class Neo4jClient:
         with self._begin_session() as session:
             return session.execute_write(_mgt_tx)
 
+    def execute_read(
+        self,
+        query: str,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[ResultSummary, List[Dict[str, Any]]]:
+        """
+        Runs an arbitrary "read" Cypher query with parameters.
+
+        Args:
+            query: Cypher query to run in Neo4j.
+            parameters: Query parameters which can be used as placeholders in the `query`.
+
+        Returns:
+            A tuple consisting of execution result summary (`neo4j.ResultSummary`) and data records if any.
+        """
+
+        @self._unit_of_work()
+        def _mgt_tx(tx: ManagedTransaction):
+            result = tx.run(
+                query,
+                parameters=parameters,
+            )
+            records = result.data()
+            summary = result.consume()
+            return summary, records
+
+        with self._begin_session() as session:
+            return session.execute_read(_mgt_tx)
+
     def update_node(self, node_label: str, doc_id: str, data: Dict[str, Any]) -> Optional[Neo4jRecord]:
         """
         Updates a given node matched by the given id (`doc_id`). Properties are mutated by `+=` operator,
