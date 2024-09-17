@@ -277,6 +277,7 @@ class Neo4jDynamicDocumentRetriever:
     def __init__(
         self,
         client_config: Neo4jClientConfig,
+        query: Optional[str] = None,
         runtime_parameters: Optional[List[str]] = None,
         doc_node_name: Optional[str] = "doc",
         compose_doc_from_result: Optional[bool] = False,
@@ -287,6 +288,7 @@ class Neo4jDynamicDocumentRetriever:
 
         Args:
             client_config: Neo4j client configuration to connect to database (e.g. credentials and connection settings).
+            query: Optional Cypher query for document retrieval. If `None` should be provided as component input.
             runtime_parameters: list of input parameters/slots for connecting components in a pipeline.
             doc_node_name: the name of the variable which is returned from Cypher query which contains Document
                 attributes (e.g. `id`, `content`, `meta` fields).
@@ -305,6 +307,7 @@ class Neo4jDynamicDocumentRetriever:
             )
 
         self._client_config = client_config
+        self._query = query
         self._runtime_parameters = runtime_parameters or []
         self._doc_node_name = doc_node_name
         self._compose_doc_from_result = compose_doc_from_result
@@ -329,6 +332,7 @@ class Neo4jDynamicDocumentRetriever:
         """
         data = default_to_dict(
             self,
+            query=self._query,
             runtime_parameters=self._runtime_parameters,
             doc_node_name=self._doc_node_name,
             compose_doc_from_result=self._compose_doc_from_result,
@@ -348,7 +352,7 @@ class Neo4jDynamicDocumentRetriever:
         data["init_parameters"]["client_config"] = client_config
         return default_from_dict(cls, data)
 
-    def run(self, query: str, parameters: Optional[Dict[str, Any]] = None, **kwargs: Dict[str, Any]):
+    def run(self, query: Optional[str] = None, parameters: Optional[Dict[str, Any]] = None, **kwargs: Dict[str, Any]):
         """
         Runs the arbitrary Cypher `query` with `parameters` and returns Documents.
 
@@ -362,6 +366,12 @@ class Neo4jDynamicDocumentRetriever:
         Returns:
             Retrieved documents.
         """
+        query = query or self._query
+        if query is None:
+            raise ValueError(
+                "`query` is mandatory input and should be provided either in component's constructor, pipeline input or"
+                "connection"
+            )
         kwargs = kwargs or {}
         parameters = parameters or {}
         parameters_combined = {**kwargs, **parameters}

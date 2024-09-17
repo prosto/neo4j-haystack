@@ -36,15 +36,18 @@ def test_retrieve_all_documents(client_config: Neo4jClientConfig):
 
 @pytest.mark.integration
 def test_compose_docs_from_result(client_config: Neo4jClientConfig):
-    retriever = Neo4jDynamicDocumentRetriever(
-        client_config=client_config, compose_doc_from_result=True, verify_connectivity=True
-    )
-
-    result = retriever.run(
-        query="""MATCH (doc:Document)
+    query = """MATCH (doc:Document)
             WITH doc, 10 as score
             RETURN doc.id as id, doc.content as content, score"""
+
+    retriever = Neo4jDynamicDocumentRetriever(
+        client_config=client_config,
+        query=query,
+        compose_doc_from_result=True,
+        verify_connectivity=True,
     )
+
+    result = retriever.run()
     documents: List[Document] = result["documents"]
 
     assert len(documents) == 9
@@ -127,6 +130,7 @@ def test_document_retriever_to_dict(neo4j_client_mock, client_config_mock):
 
     retriever = Neo4jDynamicDocumentRetriever(
         client_config=client_config_mock,
+        query="cypher",
         runtime_parameters=["year"],
         doc_node_name="doc",
         compose_doc_from_result=True,
@@ -138,6 +142,7 @@ def test_document_retriever_to_dict(neo4j_client_mock, client_config_mock):
     assert data == {
         "type": "neo4j_haystack.components.neo4j_retriever.Neo4jDynamicDocumentRetriever",
         "init_parameters": {
+            "query": "cypher",
             "runtime_parameters": ["year"],
             "doc_node_name": "doc",
             "compose_doc_from_result": True,
@@ -159,6 +164,7 @@ def test_document_retriever_from_dict(neo4j_client_mock, from_dict_mock):
     data = {
         "type": "neo4j_haystack.components.neo4j_retriever.Neo4jDynamicDocumentRetriever",
         "init_parameters": {
+            "query": "cypher",
             "runtime_parameters": ["year"],
             "doc_node_name": "doc",
             "compose_doc_from_result": True,
@@ -169,6 +175,7 @@ def test_document_retriever_from_dict(neo4j_client_mock, from_dict_mock):
 
     retriever = Neo4jDynamicDocumentRetriever.from_dict(data)
 
+    assert retriever._query == "cypher"
     assert retriever._client_config == expected_client_config
     assert retriever._runtime_parameters == ["year"]
     assert retriever._doc_node_name == "doc"
