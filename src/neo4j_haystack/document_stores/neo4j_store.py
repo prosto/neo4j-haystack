@@ -15,8 +15,12 @@ from neo4j_haystack.client.neo4j_client import (
     DEFAULT_NEO4J_URI,
     DEFAULT_NEO4J_USERNAME,
 )
-from neo4j_haystack.document_stores.utils import get_batches_from_generator
+from neo4j_haystack.document_stores.utils import (
+    flatten_dict,
+    get_batches_from_generator,
+)
 from neo4j_haystack.metadata_filter import COMPARISON_OPS, FilterParser, OperatorAST
+from neo4j_haystack.serialization.types import QueryParametersMarshaller
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +137,7 @@ class Neo4jDocumentStore:
         recreate_index: Optional[bool] = False,
         write_batch_size: int = 100,
         verify_connectivity: Optional[bool] = True,
+        document_marshaller: Optional[QueryParametersMarshaller] = None,
     ):
         """
         Constructor method
@@ -166,6 +171,10 @@ class Neo4jDocumentStore:
                 batching can help reduce memory footprint.
             verify_connectivity: If `True` will check connection to the database using provided credentials during
                 creation of the Document Store.
+            document_marshaller: A custom marshaller, if provided, to convert `haystack.Document` to a dictionary to be
+                stored as Neo4j node properties. **Neo4j can not store nested properties in a node** so this
+                customization point should be used in rare occasions in case default implementation
+                (see `_DefaultDocumentMarshaller`) is not sufficient.
 
         Raises:
             ValueError: In case similarity function specified is not supported
@@ -186,6 +195,8 @@ class Neo4jDocumentStore:
         self.recreate_index = recreate_index
         self.write_batch_size = write_batch_size
         self.verify_connectivity = verify_connectivity
+
+        self.document_marshaller = document_marshaller or _DefaultDocumentMarshaller()
 
         self.filter_parser = FilterParser()
 
@@ -673,14 +684,77 @@ class Neo4jDocumentStore:
 
     def _document_to_neo4j_record(self, document: Document) -> Neo4jRecord:
         """
-        Creates Neo4j record (`dict`) from `Document`. Please notice how `meta` fields stored on same
-        level as `Document` fields. **It assumes attribute names (keys) do not clash**.
+        Creates Neo4j record (`dict`) from a `Document` using a configured marshaller. Please notice `meta` fields will
+        be stored on same level as `Document` fields. **Such logic assumes attribute names (keys) do not clash**.
         """
-        doc_object = document.to_dict(flatten=True)
-        return doc_object
+        return self.document_marshaller.marshal(document)
 
     def _scale_to_unit_interval(self, score: float) -> float:
         return (score + 1) / 2 if self.similarity == "cosine" else float(1 / (1 + np.exp(-score / 100)))
 
     def __del__(self):
         self.neo4j_client.close_driver()
+
+
+class _DefaultDocumentMarshaller(QueryParametersMarshaller):
+    """
+    Default marshaller to convert `haystack.Document` before storing it in Neo4j node.
+    As we can not store nested attributes in the node we make sure all nested fields (including `meta`) are flattened.
+    Produced nested property names are concatenated with a given separator (e.g. ".").
+
+    Please take a look at \
+            [Property, structural, and constructed values](https://neo4j.com/docs/cypher-manual/current/values-and-types/property-structural-constructed/)
+            to better understand what values can be stored as properties.
+
+    **TODO: The logic can be improved so that nested attributes get stored as relations and nodes in Neo4j**
+    """
+
+    def __init__(self, property_separator="."):
+        self.property_separator = property_separator
+
+    def supports(self, document: Any) -> bool:
+        return isinstance(document, Document)
+
+    def marshal(self, document: Document) -> Any:
+        """
+        Converts `haystack.Document` by using `to_dict` method and then flattens any dictionary fields in case there
+        are any (in some cases such are being used in `meta` attributes). Once flattened we inspect attribute values
+        for unsupported types, e.g. custom types which are non-primitives. `list` of non-primitive types is skipped
+        when encountered.
+
+        Args:
+            document: The document to be converted to a Neo4j record.
+
+        Returns:
+            A document converted to a `dict` with flattened nested fields.
+        """
+        converted_doc = document.to_dict(flatten=True)
+        doc_object = flatten_dict(converted_doc, separator=self.property_separator)
+
+        return self._exclude_non_serializable_objects(doc_object)
+
+    def _exclude_non_serializable_objects(self, doc_object: Dict[str, Any]):
+        obj_keys = list(doc_object.keys())
+        for prop_name in obj_keys:
+            if isinstance(doc_object[prop_name], (list, set, tuple)) and len(doc_object[prop_name]) > 0:
+                value_seq = doc_object[prop_name]
+                first_value = value_seq[0]
+                is_simple = self._is_simple_neo4j_type(first_value)
+                is_homogeneous = True
+
+                if is_simple:
+                    for value in value_seq:
+                        if not isinstance(value, type(first_value)):
+                            is_homogeneous = False
+                            break
+
+                if not is_simple or not is_homogeneous:
+                    doc_object.pop(prop_name)
+                    logger.warning(
+                        "At the moment nested (complex) objects are not allowed as `list` values in Document object. "
+                        f"Property `{prop_name}` will be skipped and not stored in Neo4j node"
+                    )
+        return doc_object
+
+    def _is_simple_neo4j_type(self, obj: Any):
+        return isinstance(obj, (bool, str, int, float, type(None), bytes))
