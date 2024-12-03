@@ -27,6 +27,12 @@
 - [Overview](#overview)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Running Neo4j](#running-neo4j)
+  - [Document Store](#document-store)
+  - [Indexing documents](#indexing-documents)
+  - [Retrieving documents](#retrieving-documents)
+  - [Retrieving documents using Cypher](#retrieving-documents-using-cypher)
+  - [More examples](#more-examples)
 - [License](#license)
 
 ## Overview
@@ -98,10 +104,6 @@ pip install sentence-transformers # required in order to run pipeline examples g
 pip install neo4j-haystack
 ```
 
-> **Warning**
-> The `neo4j-haystack` package currently uses Haystack 2.0-Beta, an unstable version of what will eventually become Haystack 2.0.
-> It will be updated and tested with the latest changes periodically until a stable version of the Haystack is released.
-
 ## Usage
 
 ### Running Neo4j
@@ -123,7 +125,8 @@ docker run \
     neo4j:5.15.0
 ```
 
-As of Neo4j `5.13`, the vector search index is no longer a beta feature, consider using a version of the database `">= 5.13"`. In the example above version `5.15.0` is being used to start a container. You could explore Known issues and Limitations in the [documentation](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/).
+As of Neo4j `5.13`, the vector search index is no longer a beta feature, consider using a version of the database `">= 5.13"`. In the example above version `5.15.0` is being used to start a container.
+You could explore Known issues and Limitations in the [documentation](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/vector-indexes/).
 
 The `NEO4J_AUTH` environment variable sets default credentials (`username/password`) for authentication.
 
