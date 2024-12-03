@@ -316,9 +316,8 @@ class Neo4jDynamicDocumentRetriever:
         self._neo4j_client = Neo4jClient(client_config)
 
         # setup inputs
-        run_input_slots = {"query": str, "parameters": Optional[Dict[str, Any]]}
         kwargs_input_slots = {param: Optional[Any] for param in self._runtime_parameters}
-        component.set_input_types(self, **run_input_slots, **kwargs_input_slots)
+        component.set_input_types(self, **kwargs_input_slots)
 
         # setup outputs
         component.set_output_types(self, documents=List[Document])
