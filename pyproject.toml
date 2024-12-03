@@ -23,7 +23,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["haystack-ai", "neo4j>=5.8.1"]
+dependencies = ["haystack-ai>=2.6.0", "neo4j>=5.8.1"]
 
 [project.optional-dependencies]
 docker = ["docker"]
