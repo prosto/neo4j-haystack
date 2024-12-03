@@ -9,11 +9,11 @@ from neo4j_haystack.metadata_filter.parser import (
 )
 
 __all__ = (
-    "Neo4jQueryConverter",
-    "FilterParser",
     "AST",
-    "FilterType",
-    "LOGICAL_OPS",
     "COMPARISON_OPS",
+    "LOGICAL_OPS",
+    "FilterParser",
+    "FilterType",
+    "Neo4jQueryConverter",
     "OperatorAST",
 )
