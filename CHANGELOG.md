@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.2.0](https://github.com/prosto/neo4j-haystack/releases/tag/v2.2.0) - 2024-12-03
+
+<small>[Compare with v2.1.0](https://github.com/prosto/neo4j-haystack/compare/v2.1.0...v2.2.0)</small>
+
+### Dependencies
+
+- Update Haystack version to >=2.6.0 ([2b9f6be](https://github.com/prosto/neo4j-haystack/commit/2b9f6be6fee8d4cdff5318fb9dc145decd4c7706) by Sergey Bondarenco).
+
+### Bug Fixes
+
+- Remove those dynamic input slots in components which are declared in component's run method ([88e8a47](https://github.com/prosto/neo4j-haystack/commit/88e8a47279717d4fc433d5d32ae926af41c340a3) by Sergey Bondarenco).
+
 ## [v2.1.0](https://github.com/prosto/neo4j-haystack/releases/tag/v2.1.0) - 2024-09-17
 
 <small>[Compare with v2.0.3](https://github.com/prosto/neo4j-haystack/compare/v2.0.3...v2.1.0)</small>
