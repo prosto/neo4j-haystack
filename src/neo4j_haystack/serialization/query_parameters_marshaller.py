@@ -2,6 +2,7 @@ from dataclasses import asdict, is_dataclass
 from typing import Any, Dict
 
 from haystack import Document
+from haystack.dataclasses.chat_message import ChatMessage
 
 from neo4j_haystack.serialization.types import QueryParametersMarshaller
 
@@ -25,6 +26,22 @@ class DocumentQueryParametersMarshaller(QueryParametersMarshaller):
         Converts `haystack.Document` to dictionary so it could be used as Cypher query parameter
         """
         return obj.to_dict(flatten=True)
+
+
+class ChatMessageParametersMarshaller(QueryParametersMarshaller):
+    """
+    A marshaller which converts `haystack.dataclasses.chat_message.ChatMessage` to a dictionary when it is used as
+    query parameter in Cypher queries
+
+    Haystack's native `to_dict` method is called to produce a dictionary of Document data along with its meta
+    fields.
+    """
+
+    def supports(self, obj: Any) -> bool:
+        return isinstance(obj, ChatMessage)
+
+    def marshal(self, obj: Any) -> Dict[str, Any]:
+        return obj.to_dict()
 
 
 class DataclassQueryParametersMarshaller(QueryParametersMarshaller):
@@ -76,7 +93,12 @@ class Neo4jQueryParametersMarshaller(QueryParametersMarshaller):
     """
 
     def __init__(self):
-        self._marshallers = [DocumentQueryParametersMarshaller(), DataclassQueryParametersMarshaller()]
+        # Order of marshallers is important - first one which supports the type will be used
+        self._marshallers = [
+            DocumentQueryParametersMarshaller(),
+            ChatMessageParametersMarshaller(),
+            DataclassQueryParametersMarshaller(),
+        ]
 
     def supports(self, _obj: Any) -> bool:
         """

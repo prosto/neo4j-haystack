@@ -156,14 +156,14 @@ def test_query_writer_with_dataclass_input(client_config: Neo4jClientConfig, neo
     WITH session
     CREATE (session)-[:FIRST_MESSAGE]->(msg_node:`ChatMessage`)
     WITH msg_node
-    MATCH (msg_node) SET msg_node += { role: $chat_messages[0].role, content: $chat_messages[0].content }
+    MATCH (msg_node) SET msg_node += { role: $chat_messages[0].role, content: $chat_messages[0].content[0].text }
     WITH msg_node as first_message
 
     // Create remaining chat message nodes
     UNWIND tail($chat_messages) as tail_message
     CREATE (msg_node:`ChatMessage`)
     WITH msg_node, tail_message, first_message
-    MATCH (msg_node) SET msg_node += { role: tail_message.role, content: tail_message.content }
+    MATCH (msg_node) SET msg_node += { role: tail_message.role, content: tail_message.content[0].text }
 
     // Connect chat messages with :NEXT_MESSAGE relationship
     WITH collect(msg_node) AS message_nodes, first_message
