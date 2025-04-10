@@ -7,7 +7,7 @@ name = "neo4j-haystack"
 dynamic = ["version"]
 description = 'Integration of Neo4j graph database with Haystack'
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = "MIT"
 keywords = ["Haystack", "semantic-search", "DocumentStore", "neo4j"]
 authors = [
@@ -17,9 +17,10 @@ classifiers = [
   "Development Status :: 4 - Beta",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -28,6 +29,7 @@ dependencies = ["haystack-ai>=2.6.0", "neo4j>=5.8.1"]
 [project.optional-dependencies]
 docker = ["docker"]
 tests = [
+  "numpy<2",                      # Haystack is compatible both with numpy 1.x and 2.x, but we test with <2
   "coverage[toml]>=7.6.1",
   "pytest",
   "neo4j-haystack[docker]",
