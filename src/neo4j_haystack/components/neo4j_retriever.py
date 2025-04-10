@@ -316,7 +316,7 @@ class Neo4jDynamicDocumentRetriever:
         self._neo4j_client = Neo4jClient(client_config)
 
         # setup inputs
-        kwargs_input_slots = {param: Optional[Any] for param in self._runtime_parameters}
+        kwargs_input_slots = dict.fromkeys(self._runtime_parameters, Optional[Any])
         component.set_input_types(self, **kwargs_input_slots)
 
         # setup outputs
