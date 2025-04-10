@@ -145,20 +145,20 @@ class Neo4jClientConfig:
         if not self.url:
             raise ValueError("The `url` attribute is mandatory to connect to database.")
 
-        auth_container = self.auth or self.driver_config.get("auth")
+        self.auth = self.auth or self.driver_config.get("auth")
+        # Lets remove "auth" from driver config to avoid duplicate "auth" configuration when driver is created
+        self.driver_config = {k: v for k, v in self.driver_config.items() if k != "auth"}
 
-        if auth_container is None and self.username and self.password:
-            auth_container = (self.username, self.password)
+        if self.auth is None and self.username and self.password:
+            self.auth = (self.username, self.password)
 
-        if auth_container is None:
+        if self.auth is None:
             raise ValueError(
                 "Authentication credentials are missing. Please provide one of the following: "
                 "1) `username` and `password`, "
                 "2) `auth` field, or "
                 "3) `driver_config['auth']`."
             )
-
-        self.driver_config["auth"] = self.auth = auth_container
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -208,7 +208,7 @@ class Neo4jClient:
         if not config.url:
             raise ValueError("`Neo4jClientConfig.url` is mandatory attribute when trying to connect to Neo4j database.")
 
-        self._driver = GraphDatabase.driver(config.url, **config.driver_config)
+        self._driver = GraphDatabase.driver(config.url, auth=config.auth, **config.driver_config)
         self._filter_converter = Neo4jQueryConverter(NODE_VAR)
 
     def delete_nodes(self, node_label: str, filter_ast: Optional[AST] = None) -> None:
