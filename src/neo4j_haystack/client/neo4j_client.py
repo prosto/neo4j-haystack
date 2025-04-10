@@ -142,14 +142,21 @@ class Neo4jClientConfig:
             self.username = os.getenv("NEO4J_USERNAME", self.username)
             self.password = os.getenv("NEO4J_PASSWORD", self.password)
 
-        if self.username and self.password:
-            self.auth = (self.username, self.password)
-
         if not self.url:
             raise ValueError("The `url` attribute is mandatory to connect to database.")
 
-        if not self.auth:
-            raise ValueError("Please provide either (`username`, `password`) or `auth` fields for authentication.")
+        self.auth = self.auth or self.driver_config.get("auth")
+
+        if self.auth is None and self.username and self.password:
+            self.auth = (self.username, self.password)
+
+        if self.auth is None:
+            raise ValueError(
+                "Authentication credentials are missing. Please provide one of the following: "
+                "1) `username` and `password`, "
+                "2) `auth` field, or "
+                "3) `driver_config['auth']`."
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         """

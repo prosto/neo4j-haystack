@@ -138,6 +138,7 @@ class Neo4jDocumentStore:
         write_batch_size: int = 100,
         verify_connectivity: Optional[bool] = True,
         document_marshaller: Optional[QueryParametersMarshaller] = None,
+        neo4j_client: Optional[Neo4jClient] = None,
     ):
         """
         Constructor method
@@ -200,10 +201,13 @@ class Neo4jDocumentStore:
 
         self.filter_parser = FilterParser()
 
-        if client_config and not client_config.url:
-            client_config.url = url
-        self.client_config = client_config or Neo4jClientConfig(url, database, username, password)
-        self.neo4j_client = Neo4jClient(self.client_config)
+        if neo4j_client:
+            self.neo4j_client = neo4j_client
+        else:
+            if client_config and not client_config.url:
+                client_config.url = url
+            self.client_config = client_config or Neo4jClientConfig(url, database, username, password)
+            self.neo4j_client = Neo4jClient(self.client_config)
 
         if verify_connectivity:
             self.neo4j_client.verify_connectivity()
