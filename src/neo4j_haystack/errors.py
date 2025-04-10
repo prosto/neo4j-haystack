@@ -14,7 +14,7 @@ class Neo4jClientError(DocumentStoreError):
     """Error for issues that occur in a Neo4j client"""
 
     def __init__(self, message: Optional[str] = None):
-        super().__init__(message=message)
+        super().__init__(message)
 
 
 class Neo4jFilterParserError(Exception):
