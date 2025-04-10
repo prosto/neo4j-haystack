@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+
+## [v2.2.1](https://github.com/prosto/neo4j-haystack/releases/tag/v2.2.1) - 2025-04-10
+
+<small>[Compare with v2.2.0](https://github.com/prosto/neo4j-haystack/compare/v2.2.0...v2.2.1)</small>
+
+### Dependencies
+
+- For tests making sure numpy version is < 2 to avoid errors ([548cb95](https://github.com/prosto/neo4j-haystack/commit/548cb959d0ce099d75702143b10c37ada6db601b) by Sergey Bondarenco).
+
+### Bug Fixes
+
+- Keep "auth" as part of driver_config only for backward compatibility ([b08bb51](https://github.com/prosto/neo4j-haystack/commit/b08bb51ff9a34bbbf85f1fb241d28211ea7d9133) by Sergey Bondarenco).
+- Unify auth container propagation logic ([55412aa](https://github.com/prosto/neo4j-haystack/commit/55412aaa38c1d99ed4f9760d6312c5185b878dfb) by Sergey Bondarenco). [Issue #10](https://github.com/prosto/neo4j-haystack/issues/6)
+- Allow custom auth object propagation to database client ([9ac5028](https://github.com/prosto/neo4j-haystack/commit/9ac5028251085f65b45da77e358e080a8b1f2435) by Sergey Bondarenco). [Issue #10](https://github.com/prosto/neo4j-haystack/issues/6)
+- Align ChatMessage serialization with latest Haystack version ([98e7e5d](https://github.com/prosto/neo4j-haystack/commit/98e7e5d26cd8e9baf31a123f89d1f0f11fb1521f) by Sergey Bondarenco).
+- Base error does not take keyword arguments ([8421b4c](https://github.com/prosto/neo4j-haystack/commit/8421b4cf4dfa7ccc69e65448a61e96353e88ff32) by Sergey Bondarenco). [Issue #10](https://github.com/prosto/neo4j-haystack/issues/6)
+
+### Code Refactoring
+
+- Apply a more idiomatic way to convert a list to a dictionary of component parameters ([c259ab2](https://github.com/prosto/neo4j-haystack/commit/c259ab2195861f9d37c16f675633ed56972576a9) by Sergey Bondarenco).
+
 ## [v2.2.0](https://github.com/prosto/neo4j-haystack/releases/tag/v2.2.0) - 2024-12-03
 
 <small>[Compare with v2.1.0](https://github.com/prosto/neo4j-haystack/compare/v2.1.0...v2.2.0)</small>
@@ -54,7 +75,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 
 ### Features
 
-- Introducing  `execute_write` method in Neo4jClient to run arbitrary Cypher queries which modify data ([88e89bb](https://github.com/prosto/neo4j-haystack/commit/88e89bbe405a72e9185cf56de18aaabcebe71219) by Sergey Bondarenco).
+- Introducing `execute_write` method in Neo4jClient to run arbitrary Cypher queries which modify data ([88e89bb](https://github.com/prosto/neo4j-haystack/commit/88e89bbe405a72e9185cf56de18aaabcebe71219) by Sergey Bondarenco).
 
 ### Bug Fixes
 
